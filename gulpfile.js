@@ -1,8 +1,63 @@
 "use strict";
 var gulp = require("gulp"),
-	fs = require("fs");
+	fs = require("fs"),
+	msgErrs = {};
 
-function oompiler(opt) {
+/**
+ * 读取JSON格式文件
+ * @param  {String}   file     文件路径
+ * @param  {Function} callback 数据返回接口回调
+ */
+function readJSON(file, callback) {
+	fs.readFile(file, {
+		encoding: "utf-8"
+	}, function(err, jsonstr) {
+		if (!err) {
+			callback(JSON.parse(jsonstr));
+		}
+	});
+}
+
+/**
+ * 异常处理
+ * @param  {Error} e 错误对象
+ */
+function errrHandler(e) {
+	var msg = e.toString().replace(/\x1B\[\d+m/g, ""),
+		msgbox = require("native-msg-box");
+	if (!msgErrs[msg]) {
+		msgErrs[msg] = msg;
+		console.log(msg);
+		msgbox.prompt({
+			msg: msg,
+			title: "gulp throw a error"
+		}, function() {
+			msgErrs[msg] = null;
+		});
+	}
+}
+
+/**
+ * 寻找项目根目录
+ * @return {String} 项目根目录地址
+ */
+function findRoot() {
+	var paths = ["./", "../yiifrontendtff/"],
+		path,
+		i;
+	for (i = 0; i < paths.length; i++) {
+		path = paths[i];
+		if (fs.existsSync(path + "index.php")) {
+			return path;
+		}
+	}
+}
+
+/**
+ * 文件编译任务
+ * @param  {Object} opt css、js输入输出目录
+ */
+function compiler(opt) {
 	opt = opt || {};
 	if (!opt.scriptDest) {
 		opt.scriptDest = "./js/";
@@ -17,8 +72,7 @@ function oompiler(opt) {
 		opt.styleSrc = opt.styleDest + "src/";
 	}
 
-	var msgbox = require("native-msg-box"),
-		autoprefixer = require("gulp-autoprefixer"),
+	var autoprefixer = require("gulp-autoprefixer"),
 		sourcemaps = require("gulp-sourcemaps"),
 		livereload = require("gulp-livereload"),
 		plumber = require("gulp-plumber"),
@@ -32,7 +86,6 @@ function oompiler(opt) {
 		ext = require("gulp-ext"),
 		lessFile = opt.styleSrc + "**/*.less",
 		// scssFile = opt.styleSrc + "**/*.scss",
-		msgErrs = {},
 		lockerTimer,
 		locker,
 		uglifyOpt = {
@@ -57,24 +110,6 @@ function oompiler(opt) {
 				return;
 			}
 			return callback();
-		}
-	}
-
-	/**
-	 * 异常处理
-	 * @param  {Error} e 错误对象
-	 */
-	function errrHandler(e) {
-		var msg = e.toString().replace(/\x1B\[\d+m/g, "");
-		if (!msgErrs[msg]) {
-			msgErrs[msg] = msg;
-			console.log(msg);
-			msgbox.prompt({
-				msg: msg,
-				title: "gulp throw a error"
-			}, function() {
-				msgErrs[msg] = null;
-			});
 		}
 	}
 
@@ -158,7 +193,7 @@ function oompiler(opt) {
 				.pipe(gulp.dest(opt.scriptDest))
 				.pipe(modFilter.restore());
 
-				// .pipe(jsFilter)
+			// .pipe(jsFilter)
 		});
 	});
 
@@ -193,98 +228,162 @@ function oompiler(opt) {
 }
 
 
-function init() {
+/**
+ * 从URL获取JSON
+ * @param  {String|Object} options 请求参数
+ * @param  {Function} callback 数据返回回调
+ */
+function getJSON(options, callback) {
+	var request = require("request");
+	request(options, function(error, response, body) {
+		if (!error && response.statusCode === 200) {
+			callback(JSON.parse(body));
+		}
+	});
+}
+/**
+ * 项目初始化
+ * @param  {String} strPath 项目目录
+ */
+function init(strPath) {
+
+	// "url": "https://github.com/jquery/jquery.git"
+	var path = require("path"),
+		workPath = path.resolve(strPath);
+
+	console.log("work path:\t" + workPath);
+
+	readJSON("package.json", function(pkg) {
+		var url = pkg.repository.url,
+			pkgUrl;
+		if (url) {
+			url = url.replace(/\.\w+$/, "/");
+			pkgUrl = url + "raw/master/package.json?raw=true";
+			getJSON(pkgUrl, function(netPkg) {
+				if (netPkg.version !== pkg.version) {
+					// var msgbox = require("native-msg-box");
+					// msgbox.prompt({
+					// 	msg: "请升级您的Gulp: \t" + url,
+					// 	title: "请升级Gulp至\t" + netPkg.version
+					// }, function() {
+
+					// });
+					var request = require("request");
+					["package.json", ".jshintignore", ".jshintrc", "gulpfile.js"].forEach(function(fileName) {
+
+						request(url + "raw/master/" + fileName + "?raw=true").pipe(fs.createWriteStream(fileName))
+					});
+				}
+			});
+		}
+	});
 
 	(function(pre_commit_path) {
 		//声明 githook脚本
-		var pre_commit = "#!/bin/sh\ngulp test\nexit $?",
-			pre_commit_old;
 
-		try {
-			pre_commit_old = fs.readFileSync(pre_commit_path, "utf-8");
-		} catch (ex) {}
+		var pre_commit = "#!/bin/sh\ngulp --gulpfile " + path.relative(strPath, __dirname).replace(/\\/g, "\/") + "/gulpfile.js test\nexit $?";
 
-		//写入git hook脚本
-		if (pre_commit_old !== pre_commit) {
-			fs.writeFileSync(pre_commit_path, pre_commit);
-			console.log("git hook pre-commit");
-		}
-	})(".git/hooks/pre-commit");
+		fs.readFile(pre_commit_path, {
+			encoding: "utf-8"
+		}, function(err, pre_commit_old) {
+			if (pre_commit_old !== pre_commit) {
+				//写入git hook脚本
+				fs.writeFile(pre_commit_path, pre_commit, function(err) {
+					if (!err) {
+						console.log("init:\tgit hook pre-commit");
+					}
+				});
+			}
+		});
+
+	})(strPath + ".git/hooks/pre-commit");
 
 	(function(gitignore_path) {
 		//检查git忽略提交文件
-		var gitignore_msg,
-			gitignore_contents = fs.readFileSync(gitignore_path, "utf-8"),
-			files_ignore = [".jshintrc", ".jshintignore", "Gruntfile.js", "package.json", "node_modules", "npm-debug.log", "gulpfile.js"].filter(function(filename) {
-				if (filename && gitignore_contents.indexOf(filename) < 0) {
-					return true;
-				} else {
-					return false;
+		fs.readFile(gitignore_path, {
+			encoding: "utf-8"
+		}, function(err, gitignore_contents) {
+			if (!err) {
+				var files_ignore = [".jshintrc", ".jshintignore", "Gruntfile.js", "package.json", "node_modules", "npm-debug.log", "gulpfile.js"].filter(function(filename) {
+					if (filename && gitignore_contents.indexOf(filename) < 0) {
+						return true;
+					} else {
+						return false;
+					}
+				});
+				if (files_ignore && files_ignore.length) {
+					//写入git忽略文件列表
+					fs.appendFile(gitignore_path, "\n" + files_ignore.join("\n"), function(err) {
+						if (!err) {
+							console.log("init:\t" + files_ignore.join(",") + " is add to ignore files");
+						}
+					});
+				}
+			}
+		});
+	})(strPath + ".gitignore");
+
+	if (workPath !== __dirname) {
+		[".jshintrc", ".jshintignore"].forEach(function(fileName) {
+			var filePath = strPath + fileName;
+			fs.readFile(fileName, {
+				encoding: "utf-8"
+			}, function(err, fileCont) {
+				if (!err) {
+					fs.readFile(filePath, {
+						encoding: "utf-8"
+					}, function(err, data) {
+						if (data !== fileCont) {
+							fs.writeFile(filePath, fileCont, function(err) {
+								if (!err) {
+									console.log("init:\t" + fileName);
+								}
+							});
+						}
+
+					});
 				}
 			});
-
-		//写入git忽略文件列表
-		if (files_ignore && files_ignore.length) {
-			gitignore_msg = files_ignore.join(",") + " is add to " + gitignore_path;
-			files_ignore.unshift(gitignore_contents);
-			fs.writeFileSync(gitignore_path, files_ignore.join("\n").replace(/\n+/g, "\n"));
-			console.log(gitignore_msg);
-		}
-	})(".gitignore");
-
-	// (function() {
-	// 	//修改less编译器，使之输出的调试信息使用相对路径
-	// 	var parser_path = "node_modules/less/lib/less/parser.js",
-	// 		parser_contents = fs.readFileSync(parser_path, "utf-8"),
-	// 		re_str = /filename\s*=\s*require\('path'\).resolve\(filename\);/;
-	// 	if (re_str.test(parser_contents)) {
-	// 		parser_contents = parser_contents.replace(re_str, "filename = filename.replace(/\\\\/g, \"/\");");
-	// 		fs.writeFileSync(parser_path, parser_contents);
-	// 		console.log(parser_path + " is fixed.");
-	// 	}
-	// })();
+		});
+	}
 }
 
 /**
- * 默认任务
+ * 查找修改了的文件
+ * @param  {Function} callback 返回结果回调
+ * @param  {Boolean} cached 只查找索引了的文件
  */
-gulp.task("default", function() {
-	init();
-	oompiler();
-});
+function findDiff(callback, cached) {
+	var root = findRoot();
+
+	require("child_process").exec("git diff --name-only" + (cached ? " --cached" : ""), {
+			cwd: root
+		},
+		function(err, stdout, stderr) {
+			if (stderr) {
+				process.exit(-1);
+			}
+
+			var files = stdout.split(/[\r\n]/).filter(function(path) {
+				return !!path;
+			}).map(function(path) {
+				return root + path.trim();
+			});
+			if (cached) {
+				callback(files);
+			} else {
+				findDiff(function(filesCached) {
+					callback(files.concat(filesCached));
+				}, true);
+			}
+
+		});
+}
 
 /**
- * 修复js任务
+ * 代码检查
+ * @param  {Array[String]} files 要检查的文件路径
  */
-gulp.task("fix", function() {
-	var fixmyjs = require("gulp-fixmyjs");
-	gulp.src("./js/base.js")
-		.pipe(fixmyjs({
-			"browser": true,
-			"boss": true,
-			"curly": true,
-			"eqeqeq": true,
-			"eqnull": true,
-			"expr": true,
-			"immed": true,
-			"noarg": true,
-			"onevar": true,
-			"quotmark": "double",
-			"smarttabs": true,
-			"trailing": true,
-			"undef": true,
-			"unused": true,
-			"strict": true,
-			"jquery": true,
-			"node": true,
-			"predef": [
-				"define",
-				"require"
-			]
-		}))
-		.pipe(gulp.dest("./js/src/"));
-});
-
 function fileTest(files) {
 	var scrFiles = files.filter(function(path) {
 			return /\.(css|js|less|scss|coffee)$/.test(path) && !/\/\/# sourceMappingURL/.test(fs.readFileSync(path));
@@ -308,7 +407,7 @@ function fileTest(files) {
 		gulp = require("gulp");
 		if (jsFiles.length) {
 			jshint = require("gulp-jshint");
-			gulp.src(jsFiles).pipe(jshint()).pipe(jshint.reporter("default"));
+			gulp.src(jsFiles).pipe(jshint()).pipe(jshint.reporter("fail"));
 		}
 		if (lessFiles.length) {
 			gulp.src(lessFiles).pipe(require("gulp-less")());
@@ -317,24 +416,45 @@ function fileTest(files) {
 }
 
 /**
+ * 默认任务
+ */
+gulp.task("default", function() {
+	var path = findRoot();
+	init(path);
+	compiler({
+		scriptDest: path + "js/",
+		styleDest: path + "css/",
+		scriptSrc: path + "js/src/",
+		styleSrc: path + "css/src/"
+	});
+});
+
+/**
+ * 修复js任务
+ */
+gulp.task("fix", function() {
+	findDiff(function(files) {
+		files = files.filter(function(path) {
+			return /\.js$/.test(path) && !/\/\/# sourceMappingURL/.test(fs.readFileSync(path));
+		});
+		if (files.length) {
+			var fixmyjs = require("gulp-fixmyjs");
+			readJSON("./.jshintrc", function(jshintrc) {
+				files.forEach(function(path) {
+					gulp.src(path)
+						.pipe(require("gulp-plumber")(errrHandler))
+						.pipe(fixmyjs(jshintrc))
+						.pipe(gulp.dest("."));
+				});
+			});
+		}
+	});
+
+});
+
+/**
  * test任务
  */
 gulp.task("test", function() {
-	var exec = require("child_process").exec;
-	exec("git diff --cached --name-only", function(err, stdout, stderr) {
-		if (stderr) {
-			process.exit(-1);
-		}
-
-		var files = stdout.split(/[\r\n]/).map(function(path) {
-			return path.trim();
-		}).filter(function(path) {
-			return !!path;
-		});
-
-		if (files.length) {
-			fileTest(files);
-		}
-
-	});
+	findDiff(fileTest, true);
 });
