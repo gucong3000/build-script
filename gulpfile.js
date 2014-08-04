@@ -229,19 +229,6 @@ function compiler(opt) {
 
 
 /**
- * 从URL获取JSON
- * @param  {String|Object} options 请求参数
- * @param  {Function} callback 数据返回回调
- */
-function getJSON(options, callback) {
-	var request = require("request");
-	request(options, function(error, response, body) {
-		if (!error && response.statusCode === 200) {
-			callback(JSON.parse(body));
-		}
-	});
-}
-/**
  * 项目初始化
  * @param  {String} strPath 项目目录
  */
@@ -254,25 +241,21 @@ function init(strPath) {
 	console.log("work path:\t" + workPath);
 
 	readJSON("package.json", function(pkg) {
-		var url = pkg.repository.url,
+		var request = require("request"),
+			url = pkg.repository.url,
+			netPkg,
 			pkgUrl;
 		if (url) {
 			url = url.replace(/\.\w+$/, "/");
 			pkgUrl = url + "raw/master/package.json?raw=true";
-			getJSON(pkgUrl, function(netPkg) {
-				if (netPkg.version !== pkg.version) {
-					// var msgbox = require("native-msg-box");
-					// msgbox.prompt({
-					// 	msg: "请升级您的Gulp: \t" + url,
-					// 	title: "请升级Gulp至\t" + netPkg.version
-					// }, function() {
-
-					// });
-					var request = require("request");
-					["package.json", ".jshintignore", ".jshintrc", "gulpfile.js"].forEach(function(fileName) {
-
-						request(url + "raw/master/" + fileName + "?raw=true").pipe(fs.createWriteStream(fileName))
-					});
+			request(pkgUrl, function(error, response, body) {
+				if (!error && response.statusCode === 200) {
+					netPkg = JSON.parse(body);
+					if (netPkg.version !== pkg.version) {
+						[".jshintignore", ".jshintrc", "gulpfile.js", "package.json"].forEach(function(fileName) {
+							request(url + "raw/master/" + fileName + "?raw=true").pipe(fs.createWriteStream(fileName));
+						});
+					}
 				}
 			});
 		}
