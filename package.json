@@ -59,7 +59,6 @@
     "gulp-jshint": "^1.8.4",
     "gulp-uglify": "^0.3.1",
     "gulp-wrapper": "^0.1.5",
-    "gulp-sass": "^0.7.2",
     "gulp-fixmyjs": "0.0.10"
   },
   "scripts": {

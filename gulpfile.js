@@ -82,10 +82,8 @@ function compiler(opt) {
 		uglify = require("gulp-uglify"),
 		rename = require("gulp-rename"),
 		watch = require("gulp-watch"),
-		// sass = require("gulp-sass"),
 		less = require("gulp-less"),
 		lessFile = opt.styleSrc + "**/*.less",
-		// scssFile = opt.styleSrc + "**/*.scss",
 		lockerTimer,
 		locker,
 		uglifyOpt = {
@@ -372,7 +370,7 @@ function findDiff(callback, cached) {
  */
 function fileTest(files) {
 	var scrFiles = files.filter(function(path) {
-			return /\.(css|js|less|scss|coffee)$/.test(path) && !/\/\/# sourceMappingURL/.test(fs.readFileSync(path));
+			return /\.(css|js|less)$/.test(path) && !/\/\/# sourceMappingURL/.test(fs.readFileSync(path));
 		}),
 		jsFiles = scrFiles.filter(function(path) {
 			return /\.js$/.test(path);
