@@ -1,39 +1,34 @@
 build-script
 ============
 
-Ç°¶Ë´úÂë¹æ·¶¼ì²é£¬js¡¢cssÑ¹Ëõ£¬cssÔ¤´¦Àí¡¢ºó´¦Àí¹¤¾ß
+å‰ç«¯ä»£ç è§„èŒƒæ£€æŸ¥ï¼Œjsã€csså‹ç¼©ï¼Œcssé¢„å¤„ç†ã€åå¤„ç†å·¥å…·
 
 ----------
 
-Ç°¶Ë²¿ÃÅÓ¦Ê¹ÓÃÍ³Ò»µÄÅäÖÃ£¬¶ÔÅäÖÃµÄĞŞ¸ÄÓ¦¸ÃÌá½»ÖÁ´Ë
+å‰ç«¯éƒ¨é—¨åº”ä½¿ç”¨ç»Ÿä¸€çš„é…ç½®ï¼Œå¯¹é…ç½®çš„ä¿®æ”¹åº”è¯¥æäº¤è‡³æ­¤
 
-## °²×° ##
+## å®‰è£… ##
 
-1. °²×°[nodejs](http://nodejs.org/download/),°²×°ºó¿ÉÄÜĞèÒªÖØÆôµçÄÔ
-1. ½«°²×°Ô´ÉèÖÃÎªÖĞ¹úµØÇø£¬·ñÔò»áºÜÂı `npm config set registry http://registry.cnpmjs.org/ --global`
-1. ÃüÁîĞĞÔËĞĞ `npm install -g grunt-cli`
-1. ½âÑ¹ [grunt.rar](grunt.rar?raw=true) µ½ÏîÄ¿¸ùÄ¿Â¼
-1. ÏîÄ¿¸ùÄ¿Â¼ÏÂÔËĞĞÃüÁî `npm run build`
+1. å®‰è£…[nodejs](http://nodejs.org/download/),å®‰è£…åå¯èƒ½éœ€è¦é‡å¯ç”µè„‘
+1. å°†å®‰è£…æºè®¾ç½®ä¸ºä¸­å›½åœ°åŒºï¼Œå¦åˆ™ä¼šå¾ˆæ…¢ `npm config set registry http://registry.cnpmjs.org/ --global`
+1. å‘½ä»¤è¡Œè¿è¡Œ `npm install -g gulp`
+1. è§£å‹ [latest release][download] åˆ°é¡¹ç›®æ ¹ç›®å½•
+1. è¿è¡Œ`npm install`
 
-Éı¼¶°²×°Ö»ĞèÖ´ĞĞ×îºóÁ½²½¼´¿É
+## ä½¿ç”¨ ##
 
-## Ê¹ÓÃ ##
+1. é¡¹ç›®æ ¹ç›®å½•è¿è¡Œå‘½ä»¤`gulp`
+1. ä¿®æ”¹æ–‡ä»¶ï¼ˆ`/js/src/*.js`ã€`/css/src/*less`)ï¼Œæ–‡ä»¶ä¼šè‡ªåŠ¨ç¼–è¯‘ç›¸å…³æ–‡ä»¶ï¼Œç„¶åæµè§ˆå™¨ä¼šè‡ªåŠ¨åˆ·æ–°
+1. gitæäº¤æ–‡ä»¶æ—¶ï¼Œä¼šæ£€æŸ¥å·²ä¿®æ”¹çš„ä»£ç ï¼Œä¸ç¬¦è§„åˆ™çš„ä»£ç å°†æ— æ³•æäº¤
+1. è¿è¡Œ`gulp doc`ï¼Œå°†ä¼šç”Ÿæˆ[æ–‡æ¡£](https://github.com/Tours4Fun/documentation/tree/master/development/frontend/jsdoc)
+1. å‹ç¼©åçš„ä»£ç æœ‰sourceMapï¼Œå¦‚æµè§ˆå™¨ä¸æ”¯æŒï¼Œå¯ä½¿ç”¨è¯¥å‘½ä»¤ç”Ÿæˆæœªå‹ç¼©ç‰ˆ: `gulp --no-compress`
 
-1. ÏîÄ¿¸ùÄ¿Â¼ÔËĞĞÃüÁî`grunt`
-1. ĞŞ¸ÄÎÄ¼ş£¨`/js/src/*.js`¡¢`/css/src/*less`)£¬ÎÄ¼ş»á×Ô¶¯±àÒëÏà¹ØÎÄ¼ş£¬È»ºóä¯ÀÀÆ÷»á×Ô¶¯Ë¢ĞÂ
-1. gitÌá½»ÎÄ¼şÊ±£¬»á¼ì²éÒÑĞŞ¸ÄµÄ´úÂë£¬²»·û¹æÔòµÄ´úÂë½«ÎŞ·¨Ìá½»
-1. ÔËĞĞ'grunt dev'£¬½«»áÖØ±àÒëËùÓĞÎÄ¼ş
-1. ÔËĞĞ'grunt publish'£¬½«»áÉú³ÉÎÄµµ(documentation/development/frontend/jsdoc/)£¬²¢Ñ¹ËõÇ°¶ËÎÄ¼ş(assets/js,assets/css)
+## æµè§ˆå™¨è‡ªåŠ¨åˆ·æ–°æ’ä»¶ä¸‹è½½åœ°å€ ##
 
-## ä¯ÀÀÆ÷²å¼ş ##
+- [Chrome](https://chrome.google.com/webstore/detail/livereload/jnihajbhpnppcggbcgedagnkighmdlei)
+- [Safari](http://download.livereload.com/2.0.9/LiveReload-2.0.9.safariextz)
+- [Firefox](http://download.livereload.com/2.0.8/LiveReload-2.0.8.xpi)
 
-- ä¯ÀÀÆ÷×Ô¶¯Ë¢ĞÂ²å¼şÏÂÔØµØÖ·
-	- [Chrome](https://chrome.google.com/webstore/detail/livereload/jnihajbhpnppcggbcgedagnkighmdlei)
-	- [Safari](http://download.livereload.com/2.0.9/LiveReload-2.0.9.safariextz)
-	- [Firefox](http://download.livereload.com/2.0.8/LiveReload-2.0.8.xpi)
-- lessÔ´ÂëÎ»ÖÃÏÔÊ¾²å¼şÏÂÔØµØÖ·
-	- [Firefox](https://addons.mozilla.org/zh-CN/firefox/addon/firecompass-for-firebug/)
+## å…¶ä»– ##
 
-## ÆäËû ##
-
-- [JSHintÅäÖÃÎÄµµ](https://github.com/Tours4Fun/documentation/blob/master/development/frontend/jshint_config.md)
+- [JSHinté…ç½®æ–‡æ¡£](https://github.com/Tours4Fun/documentation/blob/master/development/frontend/jshint_config.md)
