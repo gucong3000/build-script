@@ -42,7 +42,7 @@ function errrHandler(e) {
  * @return {String} 项目根目录地址
  */
 function findRoot() {
-	var paths = ["./", "../yiifrontendtff/"],
+	var paths = ["./", "../yiifrontendtff/", "../tff/"],
 		path,
 		i;
 	for (i = 0; i < paths.length; i++) {
@@ -80,10 +80,10 @@ function compiler(opt) {
 		jshint = require("gulp-jshint"),
 		filter = require("gulp-filter"),
 		uglify = require("gulp-uglify"),
+		rename = require("gulp-rename"),
 		watch = require("gulp-watch"),
 		// sass = require("gulp-sass"),
 		less = require("gulp-less"),
-		ext = require("gulp-ext"),
 		lessFile = opt.styleSrc + "**/*.less",
 		// scssFile = opt.styleSrc + "**/*.scss",
 		lockerTimer,
@@ -169,7 +169,9 @@ function compiler(opt) {
 					header: "<PUBLIC:COMPONENT lightWeight=\"true\"><SCRIPT>\n",
 					footer: "\n</SCRIPT></PUBLIC:COMPONENT>",
 				}))
-				.pipe(ext.replace(""))
+				.pipe(rename({
+					extname: ""
+				}))
 				.pipe(gulp.dest(opt.scriptDest))
 				.pipe(htcFilter.restore())
 
@@ -185,8 +187,9 @@ function compiler(opt) {
 					header: "define(function(require, exports, module) {\n",
 					footer: "\n});"
 				}))
-				.pipe(ext.replace(""))
-				.pipe(ext.replace("js"))
+				.pipe(rename(function(path) {
+					path.basename = path.basename.replace(/\.\w+?/, "");
+				}))
 				.pipe(sourcemaps.write({
 					sourceRoot: "/js/src"
 				}))
