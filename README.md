@@ -12,7 +12,7 @@ build-script
 1. 安装[nodejs](http://nodejs.org/download/),安装后可能需要重启电脑
 1. 将安装源设置为中国地区，否则会很慢 `npm config set registry http://registry.cnpmjs.org/ --global`
 1. 命令行运行 `npm install -g gulp`
-1. 解压 [latest release][download] 到项目根目录
+1. 解压 [master.zip](archive/master.zip) 到项目根目录
 1. 运行`npm install`
 
 ## 使用 ##
