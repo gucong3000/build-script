@@ -176,6 +176,7 @@ function compiler(opt) {
 			// 处理js模块
 			.pipe(modFilter)
 				.pipe(jshint({
+					globalstrict: true,
 					predef: ["require", "exports", "module"]
 				}))
 				.pipe(jshint.reporter("fail"))
