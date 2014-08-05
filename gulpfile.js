@@ -79,13 +79,13 @@ function compiler(opt) {
 		wrapper = require("gulp-wrapper"),
 		jshint = require("gulp-jshint"),
 		filter = require("gulp-filter"),
-		uglify = require("gulp-uglify"),
 		rename = require("gulp-rename"),
 		watch = require("gulp-watch"),
 		less = require("gulp-less"),
 		lessFile = opt.styleSrc + "**/*.less",
 		lockerTimer,
 		locker,
+		uglify = opt.noCompress ? rename : require("gulp-uglify"),
 		uglifyOpt = {
 			//保留IE的jscript条件注释
 			preserveComments: function(o, info) {
@@ -122,7 +122,7 @@ function compiler(opt) {
 				.pipe(plumber(errrHandler))
 				.pipe(sourcemaps.init())
 				.pipe(less({
-					compress: true
+					compress: !opt.noCompress
 				}))
 				.pipe(autoprefixer("last 3 version", "ie > 5", "Android >= 2.1", "Safari >= 5.1", "iOS >= 6"))
 				.pipe(sourcemaps.write({
@@ -308,27 +308,7 @@ function init(strPath) {
 	})(strPath + ".gitignore");
 
 	if (workPath !== __dirname) {
-		[".jshintrc", ".jshintignore"].forEach(function(fileName) {
-			var filePath = strPath + fileName;
-			fs.readFile(fileName, {
-				encoding: "utf-8"
-			}, function(err, fileCont) {
-				if (!err) {
-					fs.readFile(filePath, {
-						encoding: "utf-8"
-					}, function(err, data) {
-						if (data !== fileCont) {
-							fs.writeFile(filePath, fileCont, function(err) {
-								if (!err) {
-									console.log("init:\t" + fileName);
-								}
-							});
-						}
-
-					});
-				}
-			});
-		});
+		gulp.src([".jshintrc", ".jshintignore"]).pipe(gulp.dest(strPath));
 	}
 }
 
@@ -406,10 +386,11 @@ gulp.task("default", function() {
 	var path = findRoot();
 	init(path);
 	compiler({
-		scriptDest: path + "js/",
-		styleDest: path + "css/",
+		noCompress: process.argv.indexOf("--no-compress") > 0,
 		scriptSrc: path + "js/src/",
-		styleSrc: path + "css/src/"
+		styleSrc: path + "css/src/",
+		scriptDest: path + "js/",
+		styleDest: path + "css/"
 	});
 });
 
@@ -417,6 +398,8 @@ gulp.task("default", function() {
  * 修复js任务
  */
 gulp.task("fix", function() {
+	// var args = process.argv.slice(2);
+
 	findDiff(function(files) {
 		files = files.filter(function(path) {
 			return /\.js$/.test(path) && !/\/\/# sourceMappingURL/.test(fs.readFileSync(path));
@@ -441,4 +424,18 @@ gulp.task("fix", function() {
  */
 gulp.task("test", function() {
 	findDiff(fileTest, true);
+});
+
+/**
+ * jsDoc任务
+ */
+gulp.task("doc", function() {
+	var yuidoc = require("gulp-yuidoc");
+	return gulp.src(findRoot() + "js/src/*.js")
+		// return gulp.src("../h5form/src/*.js")
+		.pipe(require("gulp-filter")(["*.js", "!*.*.js", "!*-min.js"]))
+		.pipe(yuidoc({}, {
+			themedir: "../documentation/development/frontend/jsdoc/"
+		}))
+		.pipe(gulp.dest("../documentation/development/frontend/jsdoc/"));
 });

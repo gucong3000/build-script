@@ -15,9 +15,5 @@
 	"unused": true,
 	"strict": true,
 	"jquery": true,
-	"node": true,
-	"predef": [
-		"define",
-		"require"
-	]
+	"node": true
 }

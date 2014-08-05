@@ -19,7 +19,7 @@ module.exports = function(grunt) {
 				version: "<%= pkg.version %>",
 				url: "<%= pkg.homepage %>",
 				options: {
-					outdir: "../../documentation/development/frontend/jsdoc/",
+					outdir: "../documentation/development/frontend/jsdoc/",
 					themedir: "node_modules/yuidocjs/themes/simple",
 					paths: "js/src/"
 				}
