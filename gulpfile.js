@@ -164,8 +164,8 @@ function compiler(opt) {
 				.pipe(jshint.reporter("fail"))
 				.pipe(uglify(uglifyOpt))
 				.pipe(wrapper({
-					header: "<PUBLIC:COMPONENT lightWeight=\"true\"><SCRIPT>\n",
-					footer: "\n</SCRIPT></PUBLIC:COMPONENT>",
+					header: "<PUBLIC:COMPONENT lightWeight=\"true\"><SCRIPT>",
+					footer: "</SCRIPT></PUBLIC:COMPONENT>",
 				}))
 				.pipe(rename({
 					extname: ""
@@ -181,12 +181,14 @@ function compiler(opt) {
 				.pipe(jshint.reporter("fail"))
 				.pipe(sourcemaps.init())
 				.pipe(uglify(uglifyOpt))
-				.pipe(wrapper({
-					header: "define(function(require, exports, module) {\n",
-					footer: "\n});"
-				}))
 				.pipe(rename(function(path) {
-					path.basename = path.basename.replace(/\.\w+?/, "");
+					path.basename = path.basename.replace(/\.\w+$/, "");
+				}))
+				.pipe(wrapper({
+					header: function(file) {
+						return "define(\"" + file.path.match(/(\w+)(\.\w+)+$/)[1] + "\", function(require, exports, module) {";
+					},
+					footer: "});"
 				}))
 				.pipe(sourcemaps.write({
 					sourceRoot: "/js/src"
