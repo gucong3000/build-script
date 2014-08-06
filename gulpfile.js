@@ -415,7 +415,7 @@ gulp.task("fix", function() {
 			if (err) {
 				console.log("file not found:\t" + path);
 			} else {
-				fs.writeFile(path, require("fixmyjs").fix(data.toString(), jshintrc));
+				fs.writeFile(path, require("fixmyjs").fix(data.toString(), jshintrc).replace(/  /g, "    "));
 			}
 		});
 	});
