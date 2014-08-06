@@ -2,7 +2,7 @@
   "name": "tff",
   "title": "Tours4Fun",
   "description": "FE",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "homepage": "http://toursforfun.com",
   "author": {
     "name": "qil",
@@ -25,6 +25,7 @@
   "devDependencies": {
     "less": "^1.7.4",
     "jshint": "^2.5.2",
+    "fixmyjs": "^0.13.1",
     "request": "^2.39.0",
     "node-sass": "^0.9.3",
     "yuidocjs": "^0.3.50",
@@ -59,8 +60,7 @@
     "gulp-jshint": "^1.8.4",
     "gulp-uglify": "^0.3.1",
     "gulp-wrapper": "^0.1.5",
-    "gulp-fixmyjs": "0.0.10",
-    "gulp-yuidoc": "^0.1.2"
+    "gulp-fixmyjs": "0.0.10"
   },
   "scripts": {
     "build": "npm install && grunt init",

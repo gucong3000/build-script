@@ -15,13 +15,17 @@ build-script
 1. 解压 [master.zip](https://github.com/gucong3000/build-script/archive/master.zip) 到项目根目录
 1. 运行`npm install`
 
+
 ## 使用 ##
 
 1. 项目根目录运行命令`gulp`
 1. 修改文件（`/js/src/*.js`、`/css/src/*less`)，文件会自动编译相关文件，然后浏览器会自动刷新
-1. git提交文件时，会检查已修改的代码，不符规则的代码将无法提交
-1. 运行`gulp doc`，将会生成[文档](https://github.com/Tours4Fun/documentation/tree/master/development/frontend/jsdoc)
 1. 压缩后的代码有sourceMap，如浏览器不支持，可使用该命令生成未压缩版: `gulp --no-compress`
+
+- git提交文件时，会检查已修改的代码，不符规则的代码将无法提交
+- 运行`gulp doc`，可在浏览器中查看文档[http://localhost:8080/](http://localhost:8080/),修改端口参数`gulp doc --port 8080`
+- 指定项目源代码路径 `gulp --path ./landingpage/`
+- js自动修正功能 `gulp fix --path ./js/base.js`
 
 ## 浏览器自动刷新插件下载地址 ##
 

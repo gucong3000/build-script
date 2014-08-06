@@ -13,7 +13,11 @@ function readJSON(file, callback) {
 		encoding: "utf-8"
 	}, function(err, jsonstr) {
 		if (!err) {
-			callback(JSON.parse(jsonstr));
+			try {
+				callback(JSON.parse(jsonstr));
+			} catch (ex) {
+				callback(eval.call({}, "(" + jsonstr + ")"));
+			}
 		}
 	});
 }
@@ -42,15 +46,18 @@ function errrHandler(e) {
  * @return {String} 项目根目录地址
  */
 function findRoot() {
-	var paths = ["./", "../yiifrontendtff/", "../tff/"],
-		path,
+	var dir = process.argv.indexOf("--path"),
 		i;
-	for (i = 0; i < paths.length; i++) {
-		path = paths[i];
-		if (fs.existsSync(path + "index.php")) {
-			return path;
+	return dir >= 0 ? process.argv[dir + 1] : (function() {
+		var paths = ["./", "../yiifrontendtff/", "../tff/"];
+		for (i = 0; i < paths.length; i++) {
+			dir = paths[i];
+			if (fs.existsSync(dir + "index.php")) {
+				return dir;
+			}
 		}
-	}
+
+	})();
 }
 
 /**
@@ -401,25 +408,17 @@ gulp.task("default", function() {
  * 修复js任务
  */
 gulp.task("fix", function() {
-	// var args = process.argv.slice(2);
-
-	findDiff(function(files) {
-		files = files.filter(function(path) {
-			return /\.js$/.test(path) && !/\/\/# sourceMappingURL/.test(fs.readFileSync(path));
+	var path = findRoot();
+	console.log(path);
+	readJSON("./.jshintrc", function(jshintrc) {
+		fs.readFile(path, function(err, data) {
+			if (err) {
+				console.log("file not found:\t" + path);
+			} else {
+				fs.writeFile(path, require("fixmyjs").fix(data.toString(), jshintrc));
+			}
 		});
-		if (files.length) {
-			var fixmyjs = require("gulp-fixmyjs");
-			readJSON("./.jshintrc", function(jshintrc) {
-				files.forEach(function(path) {
-					gulp.src(path)
-						.pipe(require("gulp-plumber")(errrHandler))
-						.pipe(fixmyjs(jshintrc))
-						.pipe(gulp.dest("."));
-				});
-			});
-		}
 	});
-
 });
 
 /**
@@ -433,12 +432,11 @@ gulp.task("test", function() {
  * jsDoc任务
  */
 gulp.task("doc", function() {
-	var yuidoc = require("gulp-yuidoc");
-	return gulp.src(findRoot() + "js/src/*.js")
-		// return gulp.src("../h5form/src/*.js")
-		.pipe(require("gulp-filter")(["*.js", "!*.*.js", "!*-min.js"]))
-		.pipe(yuidoc({}, {
-			themedir: "../documentation/development/frontend/jsdoc/"
-		}))
-		.pipe(gulp.dest("../documentation/development/frontend/jsdoc/"));
+	var port = process.argv.indexOf("--port");
+
+	require("yuidocjs").Server.start({
+		port: port >= 0 ? parseInt(process.argv[port + 1]) : 8080,
+		paths: [findRoot() + "js/"],
+		quiet: true
+	});
 });
