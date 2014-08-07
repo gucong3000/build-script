@@ -49,10 +49,11 @@ function findRoot() {
 	var dir = process.argv.indexOf("--path"),
 		i;
 	return dir >= 0 ? process.argv[dir + 1] : (function() {
-		var paths = ["./", "../yiifrontendtff/", "../tff/"];
+		var paths = [".", "../yiifrontendtff", "../tff"],
+			path = require("path");
 		for (i = 0; i < paths.length; i++) {
 			dir = paths[i];
-			if (fs.existsSync(dir + "index.php")) {
+			if (fs.existsSync(path.join(dir, "index.php"))) {
 				return dir;
 			}
 		}
@@ -290,7 +291,7 @@ function init(strPath) {
 			}
 		});
 
-	})(strPath + ".git/hooks/pre-commit");
+	})(path.join(strPath, ".git/hooks/pre-commit"));
 
 	(function(gitignore_path) {
 		//检查git忽略提交文件
@@ -315,43 +316,11 @@ function init(strPath) {
 				}
 			}
 		});
-	})(strPath + ".gitignore");
+	})(path.join(strPath, ".gitignore"));
 
 	if (workPath !== __dirname) {
 		gulp.src([".jshintrc", ".jshintignore"]).pipe(gulp.dest(strPath));
 	}
-}
-
-/**
- * 查找修改了的文件
- * @param  {Function} callback 返回结果回调
- * @param  {Boolean} cached 只查找索引了的文件
- */
-function findDiff(callback, cached) {
-	var root = findRoot();
-
-	require("child_process").exec("git diff --name-only" + (cached ? " --cached" : ""), {
-			cwd: root
-		},
-		function(err, stdout, stderr) {
-			if (stderr) {
-				process.exit(-1);
-			}
-
-			var files = stdout.split(/[\r\n]/).filter(function(path) {
-				return !!path;
-			}).map(function(path) {
-				return root + path.trim();
-			});
-			if (cached) {
-				callback(files);
-			} else {
-				findDiff(function(filesCached) {
-					callback(files.concat(filesCached));
-				}, true);
-			}
-
-		});
 }
 
 /**
@@ -393,14 +362,15 @@ function fileTest(files) {
  * 默认任务
  */
 gulp.task("default", function() {
-	var path = findRoot();
-	init(path);
+	var path = require("path"),
+		root = findRoot();
+	init(root);
 	compiler({
 		noCompress: process.argv.indexOf("--no-compress") > 0,
-		scriptSrc: path + "js/src/",
-		styleSrc: path + "css/src/",
-		scriptDest: path + "js/",
-		styleDest: path + "css/"
+		scriptSrc: path.join(root, "js/src/"),
+		styleSrc: path.join(root, "css/src/"),
+		scriptDest: path.join(root, "js/"),
+		styleDest: path.join(root, "css/")
 	});
 });
 
@@ -409,7 +379,6 @@ gulp.task("default", function() {
  */
 gulp.task("fix", function() {
 	var path = findRoot();
-	console.log(path);
 	readJSON("./.jshintrc", function(jshintrc) {
 		fs.readFile(path, function(err, data) {
 			if (err) {
@@ -425,7 +394,27 @@ gulp.task("fix", function() {
  * test任务
  */
 gulp.task("test", function() {
-	findDiff(fileTest, true);
+	var path = require("path"),
+		root = findRoot();
+
+	require("child_process").exec("git diff --name-only --cached", {
+			cwd: root
+		},
+		function(err, stdout, stderr) {
+			if (stderr) {
+				process.exit(-1);
+			}
+
+			var files = stdout.split(/[\r\n]/).filter(function(fileName) {
+				return !!fileName;
+			}).map(function(fileName) {
+				return path.join(root, fileName.trim());
+			});
+			if (files.length) {
+				fileTest(files);
+			}
+
+		});
 });
 
 /**
@@ -436,7 +425,7 @@ gulp.task("doc", function() {
 
 	require("yuidocjs").Server.start({
 		port: port >= 0 ? parseInt(process.argv[port + 1]) : 8080,
-		paths: [findRoot() + "js/"],
+		paths: [require("path").join(findRoot(), "js/")],
 		quiet: true
 	});
 });
