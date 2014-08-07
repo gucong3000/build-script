@@ -254,6 +254,7 @@ function init(strPath) {
 
 	readJSON("package.json", function(pkg) {
 		var request = require("request"),
+			opener = require("opener"),
 			url = pkg.repository.url,
 			netPkg,
 			pkgUrl;
@@ -264,6 +265,11 @@ function init(strPath) {
 				if (!error && response.statusCode === 200) {
 					netPkg = JSON.parse(body);
 					if (netPkg.version !== pkg.version) {
+						for (var i in netPkg.devDependencies) {
+							if (netPkg.devDependencies[i] !== pkg.devDependencies[i]) {
+								opener("npm install --save-dev " + i);
+							}
+						}
 						[".jshintignore", ".jshintrc", "gulpfile.js", "package.json"].forEach(function(fileName) {
 							request(url + "raw/master/" + fileName + "?raw=true").pipe(fs.createWriteStream(fileName));
 						});
@@ -422,10 +428,12 @@ gulp.task("test", function() {
  */
 gulp.task("doc", function() {
 	var port = process.argv.indexOf("--port");
+	port = port >= 0 ? parseInt(process.argv[port + 1]) : 8080;
 
 	require("yuidocjs").Server.start({
-		port: port >= 0 ? parseInt(process.argv[port + 1]) : 8080,
+		port: port,
 		paths: [require("path").join(findRoot(), "js/")],
 		quiet: true
 	});
+	require("opener")("http://localhost:" + port);
 });
