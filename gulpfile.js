@@ -239,22 +239,13 @@ function compiler(opt) {
 
 }
 
-
 /**
- * 项目初始化
- * @param  {String} strPath 项目目录
+ * 自动升级
  */
-function init(strPath) {
-
-	// "url": "https://github.com/jquery/jquery.git"
-	var path = require("path"),
-		workPath = path.resolve(strPath);
-
-	console.log("work path:\t" + workPath);
-
+function update() {
 	readJSON("package.json", function(pkg) {
-		var request = require("request"),
-			opener = require("opener"),
+		var child_process = require("child_process"),
+			request = require("request"),
 			url = pkg.repository.url,
 			netPkg,
 			pkgUrl;
@@ -267,17 +258,30 @@ function init(strPath) {
 					if (netPkg.version !== pkg.version) {
 						for (var i in netPkg.devDependencies) {
 							if (netPkg.devDependencies[i] !== pkg.devDependencies[i]) {
-								opener("npm install --save-dev " + i);
+								child_process.exec("npm install --save-dev " + i);
 							}
 						}
 						[".jshintignore", ".jshintrc", "gulpfile.js", "package.json"].forEach(function(fileName) {
-							request(url + "raw/master/" + fileName + "?raw=true").pipe(fs.createWriteStream(fileName));
+							request(url + "raw/master/" + fileName).pipe(fs.createWriteStream(fileName));
 						});
 					}
 				}
 			});
 		}
 	});
+}
+
+/**
+ * 项目初始化
+ * @param  {String} strPath 项目目录
+ */
+function init(strPath) {
+
+	// "url": "https://github.com/jquery/jquery.git"
+	var path = require("path"),
+		workPath = path.resolve(strPath);
+
+	console.log("work path:\t" + workPath);
 
 	(function(pre_commit_path) {
 		//声明 githook脚本
@@ -365,6 +369,11 @@ function fileTest(files) {
 }
 
 /**
+ * 自动升级任务
+ */
+gulp.task("update", update);
+
+/**
  * 默认任务
  */
 gulp.task("default", function() {
@@ -378,6 +387,7 @@ gulp.task("default", function() {
 		scriptDest: path.join(root, "js/"),
 		styleDest: path.join(root, "css/")
 	});
+	update();
 });
 
 /**
