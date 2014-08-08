@@ -133,7 +133,7 @@ function compiler(opt) {
 					compress: !opt.noCompress
 				}))
 				.pipe(autoprefixer("last 3 version", "ie > 5", "Android >= 2.1", "Safari >= 5.1", "iOS >= 6"))
-				.pipe(sourcemaps.write({
+				.pipe(sourcemaps.write(".", {
 					sourceRoot: "/css/src"
 				}))
 				.pipe(gulp.dest(opt.styleDest));
@@ -158,7 +158,7 @@ function compiler(opt) {
 				.pipe(jshint.reporter("fail"))
 				.pipe(sourcemaps.init())
 				.pipe(uglify(uglifyOpt))
-				.pipe(sourcemaps.write({
+				.pipe(sourcemaps.write(".", {
 					sourceRoot: "/js/src"
 				}))
 				.pipe(gulp.dest(opt.scriptDest))
