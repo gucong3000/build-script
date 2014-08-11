@@ -1,7 +1,9 @@
 "use strict";
 var gulp = require("gulp"),
+	path = require("path"),
 	fs = require("fs"),
-	msgErrs = {};
+	msgErrs = {},
+	upProcess;
 
 /**
  * 读取JSON格式文件
@@ -49,8 +51,7 @@ function findRoot() {
 	var dir = process.argv.indexOf("--path"),
 		i;
 	return dir >= 0 ? process.argv[dir + 1] : (function() {
-		var paths = [".", "../yiifrontendtff", "../tff"],
-			path = require("path");
+		var paths = [".", "../yiifrontendtff", "../tff"];
 		for (i = 0; i < paths.length; i++) {
 			dir = paths[i];
 			if (fs.existsSync(path.join(dir, "index.php"))) {
@@ -91,7 +92,6 @@ function compiler(opt) {
 		watch = require("gulp-watch"),
 		less = require("gulp-less"),
 		lessFile = opt.styleSrc + "**/*.less",
-		lockerTimer,
 		locker,
 		uglify = opt.noCompress ? rename : require("gulp-uglify"),
 		uglifyOpt = {
@@ -107,9 +107,8 @@ function compiler(opt) {
 	 */
 	function doWhenNotLock(callback) {
 		if (!locker) {
-			if (fs.existsSync("./.git/index.lock")) {
+			if (fs.existsSync(path.join(findRoot(), ".git/index.lock"))) {
 				locker = true;
-				clearTimeout(lockerTimer);
 				setTimeout(function() {
 					locker = false;
 				}, 3000);
@@ -243,32 +242,39 @@ function compiler(opt) {
  * 自动升级
  */
 function update() {
-	readJSON("package.json", function(pkg) {
-		var child_process = require("child_process"),
-			request = require("request"),
-			url = pkg.repository.url,
-			netPkg,
-			pkgUrl;
-		if (url) {
-			url = url.replace(/\.\w+$/, "/");
-			pkgUrl = url + "raw/master/package.json?raw=true";
-			request(pkgUrl, function(error, response, body) {
-				if (!error && response.statusCode === 200) {
-					netPkg = JSON.parse(body);
-					if (netPkg.version !== pkg.version) {
-						for (var i in netPkg.devDependencies) {
-							if (netPkg.devDependencies[i] !== pkg.devDependencies[i]) {
-								child_process.exec("npm install --save-dev " + i);
+	if (!upProcess) {
+		upProcess = true;
+		readJSON("package.json", function(pkg) {
+			// 读取package.json，按其写明的代码库地址去获取在线版本package.json
+			var child_process = require("child_process"),
+				request = require("request"),
+				url = pkg.repository.url,
+				netPkg,
+				pkgUrl;
+			if (url) {
+				url = url.replace(/\.\w+$/, "/");
+				pkgUrl = url + "raw/master/package.json?raw=true";
+				request(pkgUrl, function(error, response, body) {
+					if (!error && response.statusCode === 200) {
+						netPkg = JSON.parse(body);
+						// 检查线上的package.json中的version是否与本地相等
+						if (netPkg.version !== pkg.version) {
+							// 更新与本地版本号有差异的node模块
+							for (var i in netPkg.devDependencies) {
+								if (netPkg.devDependencies[i] !== pkg.devDependencies[i]) {
+									child_process.exec("npm install --save-dev " + i);
+								}
 							}
+							// 下载这几个文件到本地
+							[".jshintignore", ".jshintrc", "gulpfile.js", "package.json"].forEach(function(fileName) {
+								request(url + "raw/master/" + fileName).pipe(fs.createWriteStream(fileName));
+							});
 						}
-						[".jshintignore", ".jshintrc", "gulpfile.js", "package.json"].forEach(function(fileName) {
-							request(url + "raw/master/" + fileName).pipe(fs.createWriteStream(fileName));
-						});
 					}
-				}
-			});
-		}
-	});
+				});
+			}
+		});
+	}
 }
 
 /**
@@ -278,15 +284,14 @@ function update() {
 function init(strPath) {
 
 	// "url": "https://github.com/jquery/jquery.git"
-	var path = require("path"),
-		workPath = path.resolve(strPath);
+	var workPath = path.resolve(strPath);
 
 	console.log("work path:\t" + workPath);
 
 	(function(pre_commit_path) {
 		//声明 githook脚本
 
-		var pre_commit = "#!/bin/sh\ngulp --gulpfile " + path.relative(strPath, __dirname).replace(/\\/g, "\/") + "/gulpfile.js test\nexit $?";
+		var pre_commit = "#!/bin/sh\ngulp --gulpfile " + path.relative(strPath, __dirname).replace(/\\/g, "/") + "/gulpfile.js test\nexit $?";
 
 		fs.readFile(pre_commit_path, {
 			encoding: "utf-8"
@@ -309,15 +314,13 @@ function init(strPath) {
 			encoding: "utf-8"
 		}, function(err, gitignore_contents) {
 			if (!err) {
+				gitignore_contents = "\n" + gitignore_contents + "\n";
 				var files_ignore = [".jshintrc", ".jshintignore", "Gruntfile.js", "package.json", "node_modules", "npm-debug.log", "gulpfile.js"].filter(function(filename) {
-					if (filename && gitignore_contents.indexOf(filename) < 0) {
-						return true;
-					} else {
-						return false;
-					}
+					//将“.gitignore”文件中已有的项目排除
+					return filename && gitignore_contents.indexOf("\n" + filename + "\n") < 0;
 				});
 				if (files_ignore && files_ignore.length) {
-					//写入git忽略文件列表
+					//追加方式写入git忽略文件列表
 					fs.appendFile(gitignore_path, "\n" + files_ignore.join("\n"), function(err) {
 						if (!err) {
 							console.log("init:\t" + files_ignore.join(",") + " is add to ignore files");
@@ -336,18 +339,33 @@ function init(strPath) {
 /**
  * 代码检查
  * @param  {Array[String]} files 要检查的文件路径
+ * @return {[Array[String]]} 需要添加到git的文件修改
  */
 function fileTest(files) {
-	var scrFiles = files.filter(function(path) {
+	var returnFiles = [],
+
+		scrFiles = files.filter(function(path) {
+			//取出png图片将其压缩
+			var isPng = /\.png$/.test(path);
+			if (isPng) {
+				optiImg(path, 7);
+				returnFiles.push(path);
+			}
+			return !isPng;
+		}).filter(function(path) {
+			// 过滤掉压缩版的js和css，并过滤掉css、js、less以外的文件
 			return /\.(css|js|less)$/.test(path) && !/\/\/# sourceMappingURL/.test(fs.readFileSync(path));
 		}),
 		jsFiles = scrFiles.filter(function(path) {
+			// 将js文件单独列出
 			return /\.js$/.test(path);
 		}),
 		cssFiles = scrFiles.filter(function(path) {
+			// 将css文件单独列出
 			return /\.css$/.test(path);
 		}),
 		lessFiles = scrFiles.filter(function(path) {
+			// 将less文件单独列出
 			return /\.less$/.test(path);
 		}),
 		gulp,
@@ -359,13 +377,32 @@ function fileTest(files) {
 		}
 		gulp = require("gulp");
 		if (jsFiles.length) {
+			// jshint检查js文件
 			jshint = require("gulp-jshint");
 			gulp.src(jsFiles).pipe(jshint()).pipe(jshint.reporter("fail"));
 		}
 		if (lessFiles.length) {
+			// less文件检查
 			gulp.src(lessFiles).pipe(require("gulp-less")());
 		}
 	}
+	if (returnFiles.length) {
+		return returnFiles;
+	}
+}
+
+/**
+ * 图片压缩
+ * @param  {String} 图片文件路径
+ * @param  {[Int = 3]} 压缩级别
+ */
+function optiImg(strPath, level) {
+	var imagemin = require("gulp-imagemin");
+	return gulp.src(strPath)
+		.pipe(imagemin({
+			optimizationLevel: level || 3
+		}))
+		.pipe(gulp.dest(path.dirname(strPath)));
 }
 
 /**
@@ -377,8 +414,7 @@ gulp.task("update", update);
  * 默认任务
  */
 gulp.task("default", function() {
-	var path = require("path"),
-		root = findRoot();
+	var root = findRoot();
 	init(root);
 	compiler({
 		noCompress: process.argv.indexOf("--no-compress") > 0,
@@ -395,6 +431,7 @@ gulp.task("default", function() {
  */
 gulp.task("fix", function() {
 	var path = findRoot();
+	// 从“--path”参数中取出js路径，使用fixmyjs模块重写内容
 	readJSON("./.jshintrc", function(jshintrc) {
 		fs.readFile(path, function(err, data) {
 			if (err) {
@@ -410,10 +447,11 @@ gulp.task("fix", function() {
  * test任务
  */
 gulp.task("test", function() {
-	var path = require("path"),
-		root = findRoot();
+	var root = findRoot(),
+		child_process = require("child_process");
 
-	require("child_process").exec("git diff --name-only --cached", {
+	// 调用git获取已修改文件列表
+	child_process.exec("git diff --name-only --cached", {
 			cwd: root
 		},
 		function(err, stdout, stderr) {
@@ -421,13 +459,30 @@ gulp.task("test", function() {
 				process.exit(-1);
 			}
 
+			// 将git在命令行输出的文件名转为数组
 			var files = stdout.split(/[\r\n]/).filter(function(fileName) {
 				return !!fileName;
 			}).map(function(fileName) {
+				// 将项目路径转为相对路径
 				return path.join(root, fileName.trim());
 			});
 			if (files.length) {
-				fileTest(files);
+				var returnFiles = fileTest(files);
+				// 如果fileTest返回一个数组，将其添加到git的文件索引中
+				if (returnFiles) {
+					returnFiles = returnFiles.map(function(item) {
+						// 将相对路径转为项目路径
+						return path.relative(root, item);
+					});
+
+					// 调用git添加文件修改
+					child_process.exec("git add \"" + returnFiles.join("\" \"") + "\"", {
+						cwd: root
+					}, function(err, stdout, stderr) {
+						console.log(stderr || stdout);
+					});
+
+				}
 			}
 
 		});
@@ -442,8 +497,9 @@ gulp.task("doc", function() {
 
 	require("yuidocjs").Server.start({
 		port: port,
-		paths: [require("path").join(findRoot(), "js/")],
+		paths: [path.join(findRoot(), "js/")],
 		quiet: true
 	});
 	require("opener")("http://localhost:" + port);
+	update();
 });
