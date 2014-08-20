@@ -172,7 +172,7 @@ function compiler(opt) {
 				.pipe(uglify(uglifyOpt))
 				.pipe(wrapper({
 					header: "<PUBLIC:COMPONENT lightWeight=\"true\"><SCRIPT>",
-					footer: "</SCRIPT></PUBLIC:COMPONENT>",
+					footer: "</SCRIPT><script type=\"text/vbscript\"></script></PUBLIC:COMPONENT>",
 				}))
 				.pipe(rename({
 					extname: ""
@@ -465,6 +465,8 @@ gulp.task("test", function() {
 			}).map(function(fileName) {
 				// 将项目路径转为相对路径
 				return path.join(root, fileName.trim());
+			}).filter(function(fileName) {
+				return fs.existsSync(fileName);
 			});
 			if (files.length) {
 				var returnFiles = fileTest(files);
