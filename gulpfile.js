@@ -283,15 +283,15 @@ function update() {
  */
 function init(strPath) {
 
-	// "url": "https://github.com/jquery/jquery.git"
-	var workPath = path.resolve(strPath);
+	var workPath = path.resolve(strPath),
+		isLocal = workPath === __dirname;
 
 	console.log("work path:\t" + workPath);
 
 	(function(pre_commit_path) {
 		//声明 githook脚本
 
-		var pre_commit = "#!/bin/sh\ngulp --gulpfile " + path.relative(strPath, __dirname).replace(/\\/g, "/") + "/gulpfile.js test\nexit $?";
+		var pre_commit = "#!/bin/sh\ngulp test" + (isLocal ? "" : (" --gulpfile " + path.relative(strPath, __dirname).replace(/\\/g, "/") + "/gulpfile.js")) + "\nexit $?";
 
 		fs.readFile(pre_commit_path, {
 			encoding: "utf-8"
@@ -331,7 +331,7 @@ function init(strPath) {
 		});
 	})(path.join(strPath, ".gitignore"));
 
-	if (workPath !== __dirname) {
+	if (!isLocal) {
 		gulp.src([".jshintrc", ".jshintignore"]).pipe(gulp.dest(strPath));
 	}
 }
@@ -405,12 +405,12 @@ function optiImg(strPath, level) {
 		.pipe(gulp.dest(path.dirname(strPath)));
 }
 
-/**
+/*
  * 自动升级任务
  */
 gulp.task("update", update);
 
-/**
+/*
  * 默认任务
  */
 gulp.task("default", function() {
@@ -426,7 +426,7 @@ gulp.task("default", function() {
 	update();
 });
 
-/**
+/*
  * 修复js任务
  */
 gulp.task("fix", function() {
@@ -443,7 +443,7 @@ gulp.task("fix", function() {
 	});
 });
 
-/**
+/*
  * test任务
  */
 gulp.task("test", function() {
@@ -490,7 +490,7 @@ gulp.task("test", function() {
 		});
 });
 
-/**
+/*
  * jsDoc任务
  */
 gulp.task("doc", function() {
