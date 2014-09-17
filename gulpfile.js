@@ -158,7 +158,7 @@ function compiler(opt) {
 				.pipe(sourcemaps.init())
 				.pipe(uglify(uglifyOpt))
 				.pipe(sourcemaps.write(".", {
-					sourceRoot: "/js/src"
+					sourceRoot: opt.scriptSrc
 				}))
 				.pipe(gulp.dest(opt.scriptDest))
 				.pipe(jsFilter.restore())
@@ -199,7 +199,7 @@ function compiler(opt) {
 					footer: "});"
 				}))
 				.pipe(sourcemaps.write({
-					sourceRoot: "/js/src"
+					sourceRoot: opt.scriptSrc
 				}))
 				.pipe(gulp.dest(opt.scriptDest))
 				.pipe(modFilter.restore());
@@ -414,6 +414,22 @@ gulp.task("update", update);
  * 默认任务
  */
 gulp.task("default", function() {
+	var root = findRoot();
+	init(root);
+	compiler({
+		noCompress: process.argv.indexOf("--no-compress") > 0,
+		scriptSrc: path.join(root, "script.src/"),
+		styleSrc: path.join(root, "style.src/"),
+		scriptDest: path.join(root, "script/"),
+		styleDest: path.join(root, "style/")
+	});
+	update();
+});
+
+/*
+ * 旧的路径默认任务
+ */
+gulp.task("old", function() {
 	var root = findRoot();
 	init(root);
 	compiler({
