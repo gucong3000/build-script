@@ -69,16 +69,16 @@ function findRoot() {
 function compiler(opt) {
 	opt = opt || {};
 	if (!opt.scriptDest) {
-		opt.scriptDest = "./js/";
+		opt.scriptDest = "./script/";
 	}
 	if (!opt.styleDest) {
-		opt.styleDest = "./css/";
+		opt.styleDest = "./style/";
 	}
 	if (!opt.scriptSrc) {
-		opt.scriptSrc = opt.scriptDest + "src/";
+		opt.scriptSrc = "./script.src/";
 	}
 	if (!opt.styleSrc) {
-		opt.styleSrc = opt.styleDest + "src/";
+		opt.styleSrc = "./style.src/";
 	}
 
 	var autoprefixer = require("gulp-autoprefixer"),
