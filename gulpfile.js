@@ -245,6 +245,7 @@ function update() {
 	if (!upProcess) {
 		upProcess = true;
 		readJSON("package.json", function(pkg) {
+			console.log("当前版本：" + pkg.version);
 			// 读取package.json，按其写明的代码库地址去获取在线版本package.json
 			var child_process = require("child_process"),
 				request = require("request"),
