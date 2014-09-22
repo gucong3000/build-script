@@ -7,7 +7,7 @@ var gulp = require("gulp"),
 
 /**
  * 读取JSON格式文件
- * @param  {String}   file     文件路径
+ * @param  {String}   file	 文件路径
  * @param  {Function} callback 数据返回接口回调
  */
 function readJSON(file, callback) {
@@ -355,7 +355,7 @@ function fileTest(files) {
 			return !isPng;
 		}).filter(function(path) {
 			// 过滤掉压缩版的js和css，并过滤掉css、js、less以外的文件
-			return /\.(css|js|less)$/.test(path) && !/\/\/# sourceMappingURL/.test(fs.readFileSync(path));
+			return /\.(css|js|less|html?)$/.test(path) && !/\/\/# sourceMappingURL/.test(fs.readFileSync(path));
 		}),
 		jsFiles = scrFiles.filter(function(path) {
 			// 将js文件单独列出
@@ -369,8 +369,13 @@ function fileTest(files) {
 			// 将less文件单独列出
 			return /\.less$/.test(path);
 		}),
+		htmlFile = scrFiles.filter(function(path) {
+			// 将html文件单独列出
+			return /\.html?$/.test(path);
+		}),
 		gulp,
-		jshint;
+		jshint,
+		htmlhint;
 	if (scrFiles.length) {
 		if (cssFiles.length) {
 			console.log("应通过编译方式修改：" + cssFiles);
@@ -381,6 +386,14 @@ function fileTest(files) {
 			// jshint检查js文件
 			jshint = require("gulp-jshint");
 			gulp.src(jsFiles).pipe(jshint()).pipe(jshint.reporter("fail"));
+		}
+		if (htmlFile.length) {
+			// jshint检查js文件
+			htmlhint = require("gulp-htmlhint");
+			console.log(htmlFile);
+			gulp.src(htmlFile).pipe(htmlhint({
+				"doctype-first": false
+			})).pipe(htmlhint.reporter());
 		}
 		if (lessFiles.length) {
 			// less文件检查
