@@ -390,7 +390,6 @@ function fileTest(files) {
 		if (htmlFile.length) {
 			// jshint检查js文件
 			htmlhint = require("gulp-htmlhint");
-			console.log(htmlFile);
 			gulp.src(htmlFile).pipe(htmlhint({
 				"doctype-first": false
 			})).pipe(htmlhint.reporter());
