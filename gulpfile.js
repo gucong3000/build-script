@@ -7,8 +7,8 @@ var gulp = require("gulp"),
 
 /**
  * 读取JSON格式文件
- * @param  {String}   file	 文件路径
- * @param  {Function} callback 数据返回接口回调
+ * @param	{String}		file		文件路径
+ * @param	{Function}	callback	数据返回接口回调
  */
 function readJSON(file, callback) {
 	fs.readFile(file, {
@@ -133,7 +133,7 @@ function compiler(opt) {
 				}))
 				.pipe(autoprefixer("last 3 version", "ie > 5", "Android >= 2.1", "Safari >= 5.1", "iOS >= 6"))
 				.pipe(sourcemaps.write(".", {
-					sourceRoot: "/css/src"
+					sourceRoot: opt.styleSrc
 				}))
 				.pipe(gulp.dest(opt.styleDest));
 		});
