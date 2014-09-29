@@ -315,10 +315,10 @@ function init(strPath) {
 			encoding: "utf-8"
 		}, function(err, gitignore_contents) {
 			if (!err) {
-				gitignore_contents = "\n" + gitignore_contents + "\n";
+				gitignore_contents = gitignore_contents.split(/\r?\n/g);
 				var files_ignore = [".jshintrc", ".jshintignore", "Gruntfile.js", "package.json", "node_modules", "npm-debug.log", "gulpfile.js"].filter(function(filename) {
 					//将“.gitignore”文件中已有的项目排除
-					return filename && gitignore_contents.indexOf("\n" + filename + "\n") < 0;
+					return filename && gitignore_contents.indexOf(filename) < 0;
 				});
 				if (files_ignore && files_ignore.length) {
 					//追加方式写入git忽略文件列表
