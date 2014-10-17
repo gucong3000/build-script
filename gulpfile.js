@@ -263,12 +263,12 @@ function update() {
 							// 更新与本地版本号有差异的node模块
 							for (var i in netPkg.devDependencies) {
 								if (netPkg.devDependencies[i] !== pkg.devDependencies[i]) {
-									child_process.exec("npm install --save-dev " + i);
+									child_process.exec("npm update --save-dev " + i);
 								}
 							}
 							// 下载这几个文件到本地
 							[".jshintignore", ".jshintrc", "gulpfile.js", "package.json"].forEach(function(fileName) {
-								request(url + "raw/master/" + fileName).pipe(fs.createWriteStream(fileName));
+								request(url + "raw/master/" + fileName).pipe(fs.createWriteStream(path.join(__dirname, fileName)));
 							});
 						}
 					}
