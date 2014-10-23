@@ -26,6 +26,21 @@ build-script
 - 指定项目源代码路径 `gulp --path ./landingpage/`
 - js自动修正功能 `gulp fix --path ./js/base.js`
 
+## 免插件自动刷新方式 ##
+
+修改nginx配置如下，添加 `sub_filter`
+
+```
+server {
+    listen   80;
+    server_name qil-dev.tff.com www.qil-dev.tff.com *.qil-dev.tff.com;
+    root   /vagrant/yiifrontendtff;
+    sub_filter      </body>
+        '<script src="http://192.168.56.1:35729/livereload.js"></script></body>';
+    sub_filter_once on;
+}
+```
+
 ## 浏览器自动刷新插件下载地址 ##
 
 - [Chrome](https://chrome.google.com/webstore/detail/livereload/jnihajbhpnppcggbcgedagnkighmdlei)
