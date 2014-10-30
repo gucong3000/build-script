@@ -131,7 +131,9 @@ function compiler(opt) {
 				.pipe(less({
 					compress: !opt.noCompress
 				}))
-				.pipe(autoprefixer("last 3 version", "ie > 5", "Android >= 2.1", "Safari >= 5.1", "iOS >= 6"))
+				.pipe(autoprefixer({
+					browsers: ["last 3 version", "ie > 5", "Android >= 2.1", "Safari >= 5.1", "iOS >= 6"]
+				}))
 				.pipe(sourcemaps.write(".", {
 					sourceRoot: opt.styleSrc
 				}))
@@ -146,7 +148,7 @@ function compiler(opt) {
 		return doWhenNotLock(function() {
 			var htcFilter = filter(["*.htc.js"]),
 				modFilter = filter(["*.module.js"]),
-				jsFilter = filter(["*js", "!*.htc.js", "!*.module.js", "!*.min.js", "!*-min.js", "!jquery.pie.js", "!selectivizr.js"]);
+				jsFilter = filter(["*js", "!*.htc.js", "!*.module.js", "!*.min.js", "!*-min.js", "!jquery.pie.js"]);
 
 			// 错误捕获
 			return files.pipe(plumber(errrHandler))
