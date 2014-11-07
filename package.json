@@ -27,7 +27,7 @@
     "fixmyjs": "^0.13.6",
     "request": "^2.47.0",
     "yuidocjs": "^0.3.50",
-    "native-msg-box": "^0.0.3",
+    "native-msg-box": "0.0.3",
     "gulp": "^3.8.10",
     "gulp-util": "^3.0.1",
     "gulp-rename": "^1.2.0",
@@ -41,7 +41,7 @@
     "gulp-jshint": "^1.9.0",
     "gulp-uglify": "^1.0.1",
     "gulp-wrapper": "^0.1.5",
-    "gulp-htmlhint": "^0.0.9",
+    "gulp-htmlhint": "0.0.9",
     "gulp-imagemin": "^1.2.1"
   },
   "scripts": {
