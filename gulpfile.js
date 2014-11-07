@@ -142,9 +142,7 @@ function compiler(opt) {
 	}
 
 	// js文件编译，htc文件编译
-	watch({
-		glob: [opt.scriptSrc + "**/*.js"]
-	}, function(files) {
+	watch(opt.scriptSrc + "**/*.js", function(files) {
 		return doWhenNotLock(function() {
 			var htcFilter = filter(["*.htc.js"]),
 				modFilter = filter(["*.module.js"]),
@@ -211,9 +209,7 @@ function compiler(opt) {
 	});
 
 	// less文件编译
-	watch({
-		glob: lessFile
-	}, function(files) {
+	watch(lessFile, function(files) {
 		return doWhenNotLock(function() {
 			return less2css(files);
 		});
@@ -262,16 +258,16 @@ function update() {
 						netPkg = JSON.parse(body);
 						// 检查线上的package.json中的version是否与本地相等
 						if (netPkg.version !== pkg.version) {
+							// 下载这几个文件到本地
+							[".jshintignore", ".jshintrc", "gulpfile.js", "package.json"].forEach(function(fileName) {
+								request(url + "raw/master/" + fileName).pipe(fs.createWriteStream(path.join(__dirname, fileName)));
+							});
 							// 更新与本地版本号有差异的node模块
 							for (var i in netPkg.devDependencies) {
 								if (netPkg.devDependencies[i] !== pkg.devDependencies[i]) {
 									child_process.exec("npm update --save-dev " + i);
 								}
 							}
-							// 下载这几个文件到本地
-							[".jshintignore", ".jshintrc", "gulpfile.js", "package.json"].forEach(function(fileName) {
-								request(url + "raw/master/" + fileName).pipe(fs.createWriteStream(path.join(__dirname, fileName)));
-							});
 						}
 					}
 				});
