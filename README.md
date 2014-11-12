@@ -25,6 +25,7 @@ build-script
 - 运行`gulp doc`，可在浏览器中查看文档[http://localhost:8080/](http://localhost:8080/),修改端口参数`gulp doc --port 8080`
 - 指定项目源代码路径 `gulp --path ./landingpage/`
 - js自动修正功能 `gulp fix --path ./js/base.js`
+- BOM头修正功能 `gulp bom` 将移除所有html、css、js、php文件的BOM头
 
 ## 免插件自动刷新方式 ##
 
