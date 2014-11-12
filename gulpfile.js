@@ -532,3 +532,11 @@ gulp.task("doc", function() {
 	require("opener")("http://localhost:" + port);
 	update();
 });
+
+gulp.task("bom", function() {
+	var removeBom = require("fd-gulp-removebom");
+	var root = findRoot();
+	return gulp.src([path.join(root, "**/*.js"), path.join(root, "**/*.css"), path.join(root, "**/*.html"), path.join(root, "**/*.php")])
+		.pipe(removeBom())
+		.pipe(gulp.dest(root));
+});
