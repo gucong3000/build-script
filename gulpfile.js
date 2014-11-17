@@ -539,4 +539,5 @@ gulp.task("bom", function() {
 	return gulp.src([path.join(root, "**/*.js"), path.join(root, "**/*.css"), path.join(root, "**/*.html"), path.join(root, "**/*.php")])
 		.pipe(removeBom())
 		.pipe(gulp.dest(root));
+	update();
 });
