@@ -224,14 +224,8 @@ function compiler(opt) {
 
 	// 打开Livereload
 	setTimeout(function() {
-		var timer;
 		livereload.listen();
-		gulp.watch(["./protected/views/**/*.*", opt.styleDest + "**/*.css", "!" + opt.styleSrc + "**/*.css", opt.scriptDest + "**/*.js", "!" + opt.scriptSrc + "**/*.js"], function(event) {
-			clearTimeout(timer);
-			timer = setTimeout(function() {
-				livereload.changed(event);
-			}, 200);
-		});
+		gulp.watch([opt.rootPath + "/**/*.html", opt.rootPath + "/protected/views/**/*.php", opt.styleDest + "**/*.css", "!" + opt.styleSrc + "**/*.css", opt.scriptDest + "**/*.js", "!" + opt.scriptSrc + "**/*.js"], livereload.changed);
 	}, 800);
 
 }
@@ -432,7 +426,8 @@ gulp.task("default", function() {
 		scriptSrc: path.join(root, "script.src/"),
 		styleSrc: path.join(root, "style.src/"),
 		scriptDest: path.join(root, "script/"),
-		styleDest: path.join(root, "style/")
+		styleDest: path.join(root, "style/"),
+		rootPath: root
 	});
 	update();
 });
