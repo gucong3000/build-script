@@ -80,6 +80,9 @@ function compiler(opt) {
 	if (!opt.styleSrc) {
 		opt.styleSrc = "./style.src/";
 	}
+	if (!opt.rootPath) {
+		opt.rootPath = "./";
+	}
 
 	var autoprefixer = require("gulp-autoprefixer"),
 		sourcemaps = require("gulp-sourcemaps"),
@@ -225,7 +228,7 @@ function compiler(opt) {
 	// 打开Livereload
 	setTimeout(function() {
 		livereload.listen();
-		gulp.watch([opt.rootPath + "/**/*.html", opt.rootPath + "/protected/views/**/*.php", opt.styleDest + "**/*.css", "!" + opt.styleSrc + "**/*.css", opt.scriptDest + "**/*.js", "!" + opt.scriptSrc + "**/*.js"], livereload.changed);
+		gulp.watch([opt.rootPath + "**/*.html", opt.rootPath + "protected/views/**/*.php", opt.styleDest + "**/*.css", "!" + opt.styleSrc + "**/*.css", opt.scriptDest + "**/*.js", "!" + opt.scriptSrc + "**/*.js"], livereload.changed);
 	}, 800);
 
 }
@@ -427,7 +430,7 @@ gulp.task("default", function() {
 		styleSrc: path.join(root, "style.src/"),
 		scriptDest: path.join(root, "script/"),
 		styleDest: path.join(root, "style/"),
-		rootPath: root
+		rootPath: root + "/"
 	});
 	update();
 });
@@ -443,7 +446,8 @@ gulp.task("old", function() {
 		scriptSrc: path.join(root, "js/src/"),
 		styleSrc: path.join(root, "css/src/"),
 		scriptDest: path.join(root, "js/"),
-		styleDest: path.join(root, "css/")
+		styleDest: path.join(root, "css/"),
+		rootPath: root + "/"
 	});
 	update();
 });
