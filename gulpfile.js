@@ -51,14 +51,14 @@ function findRoot() {
 	var dir = process.argv.indexOf("--path"),
 		i;
 	return dir >= 0 ? process.argv[dir + 1] : (function() {
-		var paths = [".", "../yiifrontendtff", "../tff"];
+		var paths = [".", "../yiifrontendtff", "../tff", "../yiifrontendt4f", "../t4f", "../yiimobile", "../yii"];
 		for (i = 0; i < paths.length; i++) {
 			dir = paths[i];
 			if (fs.existsSync(path.join(dir, "index.php"))) {
 				return dir;
 			}
 		}
-
+		return ".";
 	})();
 }
 
