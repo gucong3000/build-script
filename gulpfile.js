@@ -287,7 +287,7 @@ function init(strPath) {
 	(function(pre_commit_path) {
 		//声明 githook脚本
 
-		var pre_commit = "#!/bin/sh\ngulp test" + (isLocal ? "" : (" --gulpfile " + path.relative(strPath, __dirname).replace(/\\/g, "/") + "/gulpfile.js")) + "\nexit $?";
+		var pre_commit = "#!/bin/sh\ngulp test --path " + strPath.replace(/\\/g, "/") + (isLocal ? "" : (" --gulpfile " + path.relative(strPath, __dirname).replace(/\\/g, "/") + "/gulpfile.js")) + "\nexit $?";
 
 		fs.readFile(pre_commit_path, {
 			encoding: "utf-8"
@@ -341,13 +341,20 @@ function fileTest(files) {
 	var returnFiles = [],
 
 		scrFiles = files.filter(function(path) {
-			//取出png图片将其压缩
-			var isPng = /\.png$/.test(path);
-			if (isPng) {
+			// 取出png图片将其压缩
+			if (/\.png$/.test(path)) {
 				optiImg(path, 7);
 				returnFiles.push(path);
+				return false;
+			} else {
+				var buf = fs.readFileSync(path);
+				// 检查所有待提交的文件，去除BOM头
+				if (buf[0] === 0xEF && buf[1] === 0xBB && buf[2] === 0xBF) {
+					fs.writeFileSync(path, buf.slice(3));
+					returnFiles.push(path);
+				}
 			}
-			return !isPng;
+			return true;
 		}).filter(function(path) {
 			// 过滤掉压缩版的js和css，并过滤掉css、js、less以外的文件
 			return /\.(css|js|less|html?)$/.test(path) && !/\/\/# sourceMappingURL/.test(fs.readFileSync(path));
@@ -482,6 +489,7 @@ gulp.task("test", function() {
 		},
 		function(err, stdout, stderr) {
 			if (stderr) {
+				console.log(stderr);
 				process.exit(-1);
 			}
 
@@ -529,14 +537,5 @@ gulp.task("doc", function() {
 		quiet: true
 	});
 	require("opener")("http://localhost:" + port);
-	update();
-});
-
-gulp.task("bom", function() {
-	var removeBom = require("fd-gulp-removebom");
-	var root = findRoot();
-	return gulp.src([path.join(root, "**/*.js"), path.join(root, "**/*.css"), path.join(root, "**/*.html"), path.join(root, "**/*.php")])
-		.pipe(removeBom())
-		.pipe(gulp.dest(root));
 	update();
 });
