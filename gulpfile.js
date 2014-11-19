@@ -201,7 +201,7 @@ function compiler(opt) {
 					},
 					footer: "});"
 				}))
-				.pipe(sourcemaps.write({
+				.pipe(sourcemaps.write(".", {
 					sourceRoot: opt.scriptSrc
 				}))
 				.pipe(gulp.dest(opt.scriptDest))
