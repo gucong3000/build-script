@@ -19,6 +19,7 @@ build-script
 
 1. 项目根目录运行命令`gulp`
 1. 修改文件（`./script.src/*.js`、`./style.src/*less`、`./*.html`、`./protected/views/*.php`)，会自动编译，然后浏览器会自动刷新
+1. `gulp --compiler` --compiler 参数会重新编译所有文件
 1. 压缩后的代码有sourceMap，如浏览器不支持，可使用该命令生成未压缩版: `gulp --no-compress`
 
 - git提交文件时，会检查已修改的代码，不符规则的代码将无法提交，png图片会自动压缩，文件BOM头会被自动移除

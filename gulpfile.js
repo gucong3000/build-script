@@ -84,7 +84,8 @@ function compiler(opt) {
 		opt.rootPath = "./";
 	}
 
-	var autoprefixer = require("gulp-autoprefixer"),
+	var allCompiler = process.argv.indexOf("--compiler") > 0,
+		autoprefixer = require("gulp-autoprefixer"),
 		sourcemaps = require("gulp-sourcemaps"),
 		livereload = require("gulp-livereload"),
 		plumber = require("gulp-plumber"),
@@ -92,7 +93,9 @@ function compiler(opt) {
 		jshint = require("gulp-jshint"),
 		filter = require("gulp-filter"),
 		rename = require("gulp-rename"),
-		watch = require("gulp-watch"),
+		watch = allCompiler ? function(globs, fn) {
+			return fn(gulp.src(globs));
+		} : require("gulp-watch"),
 		less = require("gulp-less"),
 		lessFile = opt.styleSrc + "**/*.less",
 		locker,
@@ -217,20 +220,20 @@ function compiler(opt) {
 			return less2css(files);
 		});
 	});
-
-	// less组件发生变化时重编译所有less文件
-	gulp.watch(opt.styleSrc + "**/*.module.less", function() {
-		return doWhenNotLock(function() {
-			return less2css();
+	if (!allCompiler) {
+		// less组件发生变化时重编译所有less文件
+		gulp.watch(opt.styleSrc + "**/*.module.less", function() {
+			return doWhenNotLock(function() {
+				return less2css();
+			});
 		});
-	});
 
-	// 打开Livereload
-	setTimeout(function() {
-		livereload.listen();
-		gulp.watch([opt.rootPath + "**/*.html", opt.rootPath + "protected/views/**/*.php", opt.styleDest + "**/*.css", "!" + opt.styleSrc + "**/*.css", opt.scriptDest + "**/*.js", "!" + opt.scriptSrc + "**/*.js"], livereload.changed);
-	}, 800);
-
+		// 打开Livereload
+		setTimeout(function() {
+			livereload.listen();
+			gulp.watch([opt.rootPath + "**/*.html", opt.rootPath + "protected/views/**/*.php", opt.styleDest + "**/*.css", "!" + opt.styleSrc + "**/*.css", opt.scriptDest + "**/*.js", "!" + opt.scriptSrc + "**/*.js"], livereload.changed);
+		}, 800);
+	}
 }
 
 /**
