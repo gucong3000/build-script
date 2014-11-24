@@ -150,9 +150,9 @@ function compiler(opt) {
 	// js文件编译，htc文件编译
 	watch(opt.scriptSrc + "**/*.js", function(files) {
 		return doWhenNotLock(function() {
-			var htcFilter = filter(["*.htc.js"]),
-				modFilter = filter(["*.module.js"]),
-				jsFilter = filter(["*js", "!*.htc.js", "!*.module.js", "!*.min.js", "!*-min.js", "!jquery.pie.js"]);
+			var htcFilter = filter(["**/*.htc.js"]),
+				modFilter = filter(["**/*.module.js"]),
+				jsFilter = filter(["*js", "!**/*.htc.js", "!**/*.module.js", "!**/*.min.js", "!**/*-min.js"]);
 
 			// 错误捕获
 			return files.pipe(plumber(errrHandler))
