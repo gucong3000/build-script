@@ -190,7 +190,7 @@ function compiler(opt) {
 			.pipe(modFilter)
 				.pipe(jshint({
 					globalstrict: true,
-					predef: ["require", "exports", "module"]
+					jquery: false
 				}))
 				.pipe(jshint.reporter("fail"))
 				.pipe(sourcemaps.init())
@@ -200,7 +200,7 @@ function compiler(opt) {
 				}))
 				.pipe(wrapper({
 					header: function(file) {
-						return "define(\"" + file.path.match(/(\w+)(\.\w+)+$/)[1] + "\", function(require, exports, module) {";
+						return "(function(f){typeof define===\"function\"?define(\"" + file.path.match(/(\w+(\.\w+)+)(\.\w+)$/)[1] + "\",f):f()})(function(require,exports,module){";
 					},
 					footer: "});"
 				}))
