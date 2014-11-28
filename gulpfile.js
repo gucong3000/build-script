@@ -33,7 +33,7 @@ function errrHandler(e) {
 		msgbox = require("native-msg-box");
 	if (!msgErrs[msg]) {
 		msgErrs[msg] = msg;
-		console.log(msg);
+		console.log(JSON.stringify(e, 0, 4).trim() || msg);
 		msgbox.prompt({
 			msg: msg,
 			title: "gulp throw a error"
@@ -93,6 +93,7 @@ function compiler(opt) {
 		jshint = require("gulp-jshint"),
 		filter = require("gulp-filter"),
 		rename = require("gulp-rename"),
+		tmodjs = require('gulp-tmod'),
 		watch = allCompiler ? function(globs, fn) {
 			return fn(gulp.src(globs));
 		} : require("gulp-watch"),
@@ -152,7 +153,7 @@ function compiler(opt) {
 		return doWhenNotLock(function() {
 			var htcFilter = filter(["**/*.htc.js"]),
 				modFilter = filter(["**/*.module.js"]),
-				jsFilter = filter(["*js", "!**/*.htc.js", "!**/*.module.js", "!**/*.min.js", "!**/*-min.js"]);
+				jsFilter = filter(["*.js", "!**/*.htc.js", "!**/*.module.js", "!**/*.min.js", "!**/*-min.js"]);
 
 			// 错误捕获
 			return files.pipe(plumber(errrHandler))
@@ -200,7 +201,7 @@ function compiler(opt) {
 				}))
 				.pipe(wrapper({
 					header: function(file) {
-						return "(function(f){typeof define===\"function\"?define(\"" + file.path.match(/(\w+(\.\w+)+)(\.\w+)$/)[1] + "\",f):f()})(function(require,exports,module){";
+						return "(function(f){typeof define===\"function\"?define(\"" + file.path.match(/([^\/\\]+)(\.\w+)$/)[1] + "\",f):f()})(function(require,exports,module){";
 					},
 					footer: "});"
 				}))
@@ -220,6 +221,18 @@ function compiler(opt) {
 			return less2css(files);
 		});
 	});
+
+	// html模板编译为js模块
+	watch(opt.scriptSrc + "**/*.html", function(files) {
+		return doWhenNotLock(function() {
+			return files.pipe(tmodjs({
+                output: opt.scriptDest,
+                base: opt.scriptSrc,
+                combo: false
+			}));
+		});
+	});
+
 	if (!allCompiler) {
 		// less组件发生变化时重编译所有less文件
 		gulp.watch(opt.styleSrc + "**/*.module.less", function() {
