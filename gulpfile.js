@@ -228,7 +228,8 @@ function compiler(opt) {
 			return files.pipe(tmodjs({
                 output: opt.scriptDest,
                 base: opt.scriptSrc,
-                combo: false
+                combo: false,
+                type: "cmd"
 			}));
 		});
 	});
@@ -343,9 +344,9 @@ function init(strPath) {
 		});
 	})(path.join(strPath, ".gitignore"));
 
-	if (!isLocal) {
-		gulp.src([".jshintrc", ".jshintignore"]).pipe(gulp.dest(strPath));
-	}
+	// if (!isLocal) {
+	// 	gulp.src([".jshintrc", ".jshintignore"]).pipe(gulp.dest(strPath));
+	// }
 }
 
 /**

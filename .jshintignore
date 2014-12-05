@@ -1,5 +1,5 @@
-js/src/selectivizr.js
-js/src/PIE_IE678.js
-js/src/PIE_IE9.js
-**/*-min.js
-**/*.min.js
+selectivizr.js
+PIE_IE678.js
+PIE_IE9.js
+*-min.js
+*.min.js
