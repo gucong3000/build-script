@@ -33,7 +33,9 @@ function errrHandler(e) {
 		msgbox = require("native-msg-box");
 	if (!msgErrs[msg]) {
 		msgErrs[msg] = msg;
-		console.log(JSON.stringify(e, 0, 4).trim() || msg);
+		if (e.plugin !== "gulp-jshint") {
+			console.log(JSON.stringify(e, 0, 4).trim() || msg);
+		}
 		msgbox.prompt({
 			msg: msg,
 			title: "gulp throw a error"
@@ -176,6 +178,7 @@ function compiler(opt) {
 					predef: ["element"]
 				}))
 				.pipe(jshint.reporter("fail"))
+				.pipe(jshint.reporter())
 				.pipe(uglify(uglifyOpt))
 				.pipe(wrapper({
 					header: "<PUBLIC:COMPONENT lightWeight=\"true\"><SCRIPT>",
@@ -194,6 +197,7 @@ function compiler(opt) {
 					jquery: false
 				}))
 				.pipe(jshint.reporter("fail"))
+				.pipe(jshint.reporter())
 				.pipe(sourcemaps.init())
 				.pipe(uglify(uglifyOpt))
 				.pipe(rename(function(path) {
@@ -226,10 +230,10 @@ function compiler(opt) {
 	watch(opt.scriptSrc + "**/*.html", function(files) {
 		return doWhenNotLock(function() {
 			return files.pipe(tmodjs({
-                output: opt.scriptDest,
-                base: opt.scriptSrc,
-                combo: false,
-                type: "cmd"
+				output: opt.scriptDest,
+				base: opt.scriptSrc,
+				combo: false,
+				type: "cmd"
 			}));
 		});
 	});
