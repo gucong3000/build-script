@@ -382,7 +382,7 @@ function fileTest(files) {
 		}),
 		jsFiles = scrFiles.filter(function(path) {
 			// 将js文件单独列出
-			return /\.js$/.test(path);
+			return /\.js$/.test(path) && !(/[\.\-]min\.js$/.test(path));
 		}),
 		cssFiles = scrFiles.filter(function(path) {
 			// 将css文件单独列出
@@ -408,7 +408,7 @@ function fileTest(files) {
 		if (jsFiles.length) {
 			// jshint检查js文件
 			jshint = require("gulp-jshint");
-			gulp.src(jsFiles).pipe(jshint()).pipe(jshint.reporter("fail"));
+			gulp.src(jsFiles).pipe(jshint()).pipe(jshint.reporter()).pipe(jshint.reporter("fail"));
 		}
 		if (htmlFile.length) {
 			// jshint检查js文件

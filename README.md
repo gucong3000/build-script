@@ -15,17 +15,29 @@ build-script
 1. 解压 [master.zip](https://github.com/gucong3000/build-script/archive/master.zip) 到项目根目录
 1. 运行`npm install`
 
-## 使用 ##
+## gulp任务 ##
+
+- `default` 文件编译任务
+- `update` 自动升级
+- `test` 代码检查，供git提交时调用
+- `doc` 显示jsDoc文档
+- `fix` js文件自动修正代码规范 必须配合`--path`参数指定文件名 eq 	`gulp fix --path js.src/xx.js`
+
+## 参数 ##
+
+- `--compiler` 立即编译所有文件然后退出  eq: `gulp --compiler`
+- `--no-compress` 便以文件时不压缩代码 eq: `gulp --no-compiler`
+- `--path` 指定工作路径 eq: `gulp --path ../landingpage/`
+- `--port` 指定文档查看时作为http服务使用的端口号 eq: `gulp doc --port 8080`
+
+## 使用说明 ##
 
 1. 项目根目录运行命令`gulp`
 1. 修改文件（`./script.src/*.js`、`./style.src/*less`、`./*.html`、`./protected/views/*.php`)，会自动编译，然后浏览器会自动刷新
-1. `gulp --compiler` --compiler 参数会重新编译所有文件
+1. `gulp --compiler` --compiler 参数会重新编译所有文件，然后退出，不监控文件变化
 1. 压缩后的代码有sourceMap，如浏览器不支持，可使用该命令生成未压缩版: `gulp --no-compress`
 
-- git提交文件时，会检查已修改的代码，不符规则的代码将无法提交，png图片会自动压缩，文件BOM头会被自动移除
-- 运行`gulp doc`，可在浏览器中查看文档[http://localhost:8080/](http://localhost:8080/),修改端口参数`gulp doc --port 8080`
-- 指定项目路径 `gulp --path ../landingpage/`
-- js自动修正功能 `gulp fix --path ../js/base.js`
+- git提交文件时，会检查已修改的代码，不符规则的代码将无法提交，同时png图片会自动压缩，文件BOM头会被自动移除
 - 多个项目也可公用一份构建工具，在单独的文件夹下解压并运行gulp，每次都加`--path`参数即可
 
 ## 免插件自动刷新方式 ##
