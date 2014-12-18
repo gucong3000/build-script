@@ -134,7 +134,7 @@ function compiler(opt) {
 	 */
 	function less2css(files) {
 		return doWhenNotLock(function() {
-			return (files || gulp.src([lessFile])).pipe(filter(["*.less", "!**/*.module.less"]))
+			return (files || gulp.src([lessFile])).pipe(filter(["**/*.less", "!**/*.module.less"]))
 				.pipe(plumber(errrHandler))
 				.pipe(sourcemaps.init())
 				.pipe(less({
