@@ -115,15 +115,19 @@ function compiler(opt) {
 	 * @param  {Function} callback 要执行的回调函数
 	 */
 	function doWhenNotLock(callback) {
-		if (!locker) {
-			if (fs.existsSync(path.join(findRoot(), ".git/index.lock"))) {
-				locker = true;
-				setTimeout(function() {
-					locker = false;
-				}, 3000);
-				return;
+		try {
+			if (!locker) {
+				if (fs.existsSync(path.join(findRoot(), ".git/index.lock"))) {
+					locker = true;
+					setTimeout(function() {
+						locker = false;
+					}, 3000);
+					return;
+				}
+				return callback();
 			}
-			return callback();
+		} catch (ex) {
+			errrHandler(ex)
 		}
 	}
 
@@ -141,7 +145,7 @@ function compiler(opt) {
 					compress: !opt.noCompress
 				}))
 				.pipe(autoprefixer({
-					browsers: ["last 3 version", "ie > 5", "Android >= 2.1", "Safari >= 5.1", "iOS >= 6"]
+					browsers: ["last 3 version", "ie > 8", "Android >= 3", "Safari >= 5.1", "iOS >= 5"]
 				}))
 				.pipe(sourcemaps.write(".", {
 					sourceRoot: opt.styleSrc
@@ -458,6 +462,23 @@ gulp.task("default", function() {
 		styleSrc: path.join(root, "style.src/"),
 		scriptDest: path.join(root, "script/"),
 		styleDest: path.join(root, "style/"),
+		rootPath: root + "/"
+	});
+	update();
+});
+
+/*
+ * 默认任务
+ */
+gulp.task("m", function() {
+	var root = findRoot();
+	init(root);
+	compiler({
+		noCompress: process.argv.indexOf("--no-compress") > 0,
+		scriptSrc: path.join(root, "js.src/"),
+		styleSrc: path.join(root, "css.src/"),
+		scriptDest: path.join(root, "js/"),
+		styleDest: path.join(root, "css/"),
 		rootPath: root + "/"
 	});
 	update();
