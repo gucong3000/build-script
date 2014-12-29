@@ -382,7 +382,7 @@ function fileTest(files) {
 			return true;
 		}).filter(function(path) {
 			// 过滤掉压缩版的js和css，并过滤掉css、js、less以外的文件
-			return /\.(css|js|less|html?)$/.test(path) && !/(^\/\*\s*TMODJS\s*:|\/\/# sourceMappingURL[^n]+$)/.test(fs.readFileSync(path));
+			return /\.(css|js|less|html?)$/.test(path) && !/(^\/\*\s*TMODJS\s*:|\/\/# sourceMappingURL[^\n]+$)/.test(fs.readFileSync(path));
 		}),
 		jsFiles = scrFiles.filter(function(path) {
 			// 将js文件单独列出
