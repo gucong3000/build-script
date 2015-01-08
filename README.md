@@ -28,7 +28,7 @@ build-script
 ## 参数 ##
 
 - `--compiler` 立即编译所有文件然后退出  eq: `gulp --compiler`
-- `--no-compress` 便以文件时不压缩代码 eq: `gulp --no-compiler`
+- `--no-compress` 编译文件时不压缩代码 eq: `gulp --no-compiler`
 - `--path` 指定工作路径 eq: `gulp --path ../landingpage/`
 - `--port` 指定文档查看时作为http服务使用的端口号 eq: `gulp doc --port 8080`
 

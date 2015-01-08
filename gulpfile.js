@@ -90,12 +90,13 @@ function compiler(opt) {
 		autoprefixer = require("gulp-autoprefixer"),
 		sourcemaps = require("gulp-sourcemaps"),
 		livereload = require("gulp-livereload"),
+		htmlhint = require("gulp-htmlhint"),
 		plumber = require("gulp-plumber"),
 		wrapper = require("gulp-wrapper"),
 		jshint = require("gulp-jshint"),
 		filter = require("gulp-filter"),
 		rename = require("gulp-rename"),
-		tmodjs = require('gulp-tmod'),
+		tmodjs = require("gulp-tmod"),
 		watch = allCompiler ? function(globs, fn) {
 			return fn(gulp.src(globs));
 		} : require("gulp-watch"),
@@ -127,7 +128,7 @@ function compiler(opt) {
 				return callback();
 			}
 		} catch (ex) {
-			errrHandler(ex)
+			errrHandler(ex);
 		}
 	}
 
@@ -233,12 +234,24 @@ function compiler(opt) {
 	// html模板编译为js模块
 	watch(opt.scriptSrc + "**/*.html", function(files) {
 		return doWhenNotLock(function() {
-			return files.pipe(tmodjs({
-				output: opt.scriptDest,
-				base: opt.scriptSrc,
-				combo: false,
-				type: "cmd"
-			}));
+			return files.pipe(plumber(errrHandler))
+				.pipe(tmodjs({
+					output: opt.scriptDest,
+					base: opt.scriptSrc,
+					combo: false,
+					type: "cmd"
+				}));
+		});
+	});
+
+	// html规范检查
+	watch(opt.rootPath + "protected/views/**/*.html", function(files) {
+		return doWhenNotLock(function() {
+			return files.pipe(plumber(errrHandler))
+				.pipe(htmlhint({
+					"doctype-first": false
+				}))
+				.pipe(htmlhint.reporter());
 		});
 	});
 
@@ -309,52 +322,58 @@ function init(strPath) {
 
 	console.log("work path:\t" + workPath);
 
-	(function(pre_commit_path) {
-		//声明 githook脚本
+	// 先判断当前目录是否为git项目目录
+	fs.exists(path.join(strPath, ".git"), function(exists) {
+		if (exists) {
+			(function(pre_commit_path) {
+				//声明 githook脚本
 
-		var pre_commit = "#!/bin/sh\ngulp test --path " + strPath.replace(/\\/g, "/") + (isLocal ? "" : (" --gulpfile " + path.relative(strPath, __dirname).replace(/\\/g, "/") + "/gulpfile.js")) + "\nexit $?";
+				var pre_commit = "#!/bin/sh\ngulp test --path " + strPath.replace(/\\/g, "/") + (isLocal ? "" : (" --gulpfile " + path.relative(strPath, __dirname).replace(/\\/g, "/") + "/gulpfile.js")) + "\nexit $?";
 
-		fs.readFile(pre_commit_path, {
-			encoding: "utf-8"
-		}, function(err, pre_commit_old) {
-			if (pre_commit_old !== pre_commit) {
-				//写入git hook脚本
-				fs.writeFile(pre_commit_path, pre_commit, function(err) {
-					if (!err) {
-						console.log("init:\tgit hook pre-commit");
+				fs.readFile(pre_commit_path, {
+					encoding: "utf-8"
+				}, function(err, pre_commit_old) {
+					if (pre_commit_old !== pre_commit) {
+						//写入git hook脚本
+						fs.writeFile(pre_commit_path, pre_commit, function(err) {
+							if (!err) {
+								console.log("init:\tgit hook pre-commit");
+							}
+						});
 					}
 				});
-			}
-		});
 
-	})(path.join(strPath, ".git/hooks/pre-commit"));
+			})(path.join(strPath, ".git/hooks/pre-commit"));
 
-	(function(gitignore_path) {
-		//检查git忽略提交文件
-		fs.readFile(gitignore_path, {
-			encoding: "utf-8"
-		}, function(err, gitignore_contents) {
-			if (!err) {
-				gitignore_contents = gitignore_contents.split(/\r?\n/g);
-				var files_ignore = [".jshintrc", ".jshintignore", "Gruntfile.js", "package.json", "node_modules", "npm-debug.log", "gulpfile.js"].filter(function(filename) {
-					//将“.gitignore”文件中已有的项目排除
-					return filename && gitignore_contents.indexOf(filename) < 0;
-				});
-				if (files_ignore && files_ignore.length) {
-					//追加方式写入git忽略文件列表
-					fs.appendFile(gitignore_path, "\n" + files_ignore.join("\n"), function(err) {
-						if (!err) {
-							console.log("init:\t" + files_ignore.join(",") + " is add to ignore files");
+			(function(gitignore_path) {
+				//检查git忽略提交文件
+				fs.readFile(gitignore_path, {
+					encoding: "utf-8"
+				}, function(err, gitignore_contents) {
+					if (!err) {
+						gitignore_contents = gitignore_contents.split(/\r?\n/g);
+						var files_ignore = [".jshintrc", ".jshintignore", "Gruntfile.js", "package.json", "node_modules", "npm-debug.log", "gulpfile.js"].filter(function(filename) {
+							//将“.gitignore”文件中已有的项目排除
+							return filename && gitignore_contents.indexOf(filename) < 0;
+						});
+						if (files_ignore && files_ignore.length) {
+							//追加方式写入git忽略文件列表
+							fs.appendFile(gitignore_path, "\n" + files_ignore.join("\n"), function(err) {
+								if (!err) {
+									console.log("init:\t" + files_ignore.join(",") + " is add to ignore files");
+								}
+							});
 						}
-					});
-				}
-			}
-		});
-	})(path.join(strPath, ".gitignore"));
+					}
+				});
+			})(path.join(strPath, ".gitignore"));
 
-	// if (!isLocal) {
-	// 	gulp.src([".jshintrc", ".jshintignore"]).pipe(gulp.dest(strPath));
-	// }
+			if (!isLocal) {
+				gulp.src([".jshintrc", ".jshintignore"]).pipe(gulp.dest(strPath));
+			}
+		}
+	});
+
 }
 
 /**
@@ -363,7 +382,25 @@ function init(strPath) {
  * @return {[Array[String]]} 需要添加到git的文件修改
  */
 function fileTest(files) {
-	var returnFiles = [],
+	/**
+	 * 判断路径不在 .jshintignore 文件中
+	 * @param  {String} path 路径
+	 * @return {Boolean}     不存在于 .jshintignore 文件中
+	 */
+	function notIgnore(path) {
+		path = path.replace(/\\/g, "/");
+		var result = true;
+		jshintignore.forEach(function(ignorePath) {
+			if (path.indexOf(ignorePath) >= 0) {
+				result = false;
+				return result;
+			}
+		});
+		return result;
+	}
+
+	var jshintignore = fs.readFileSync(".jshintignore").toString().trim().split(/\r?\n/),
+		returnFiles = [],
 
 		scrFiles = files.filter(function(path) {
 			// 取出png图片将其压缩
@@ -379,10 +416,8 @@ function fileTest(files) {
 					returnFiles.push(path);
 				}
 			}
-			return true;
-		}).filter(function(path) {
-			// 过滤掉压缩版的js和css，并过滤掉css、js、less以外的文件
-			return /\.(css|js|less|html?)$/.test(path) && !/(^\/\*\s*TMODJS\s*:|\/\/# sourceMappingURL[^\n]+$)/.test(fs.readFileSync(path));
+			// 过滤掉压缩版的js和css，并过滤掉css、js、less、html以外的文件，过滤掉.jshintignore声明的文件，过滤掉TMODJS文件
+			return /\.(css|js|less|html?)$/i.test(path) && notIgnore(path) && !/(^\/\*\s*TMODJS\s*:|\/\/# sourceMappingURL[^\n]+$)/.test(fs.readFileSync(path));
 		}),
 		jsFiles = scrFiles.filter(function(path) {
 			// 将js文件单独列出
@@ -417,9 +452,11 @@ function fileTest(files) {
 		if (htmlFile.length) {
 			// jshint检查js文件
 			htmlhint = require("gulp-htmlhint");
-			gulp.src(htmlFile).pipe(htmlhint({
-				"doctype-first": false
-			})).pipe(htmlhint.reporter());
+			gulp.src(htmlFile)
+				.pipe(htmlhint({
+					"doctype-first": false
+				}))
+				.pipe(htmlhint.failReporter());
 		}
 		if (lessFiles.length) {
 			// less文件检查
