@@ -93,6 +93,7 @@ function compiler(opt) {
 		htmlhint = require("gulp-htmlhint"),
 		plumber = require("gulp-plumber"),
 		wrapper = require("gulp-wrapper"),
+		replace = require("gulp-replace"),
 		jshint = require("gulp-jshint"),
 		filter = require("gulp-filter"),
 		rename = require("gulp-rename"),
@@ -244,18 +245,18 @@ function compiler(opt) {
 		});
 	});
 
-	// html规范检查
-	watch(opt.rootPath + "protected/views/**/*.html", function(files) {
-		return doWhenNotLock(function() {
-			return files.pipe(plumber(errrHandler))
-				.pipe(htmlhint({
-					"doctype-first": false
-				}))
-				.pipe(htmlhint.reporter());
-		});
-	});
-
 	if (!allCompiler) {
+		// html规范检查
+		watch(opt.rootPath + "protected/views/**/*.html", function(files) {
+			return doWhenNotLock(function() {
+				return files.pipe(plumber(errrHandler))
+					.pipe(replace(/\{%[\s\S]*?%\}/g, ""))
+					.pipe(htmlhint({
+						"doctype-first": false
+					}))
+					.pipe(htmlhint.reporter());
+			});
+		});
 		// less组件发生变化时重编译所有less文件
 		gulp.watch(opt.styleSrc + "**/*.module.less", function() {
 			return doWhenNotLock(function() {
@@ -437,6 +438,7 @@ function fileTest(files) {
 		}),
 		gulp,
 		jshint,
+		replace,
 		htmlhint;
 	if (scrFiles.length) {
 		if (cssFiles.length) {
@@ -452,7 +454,9 @@ function fileTest(files) {
 		if (htmlFile.length) {
 			// jshint检查js文件
 			htmlhint = require("gulp-htmlhint");
+			replace = require("gulp-replace");
 			gulp.src(htmlFile)
+				.pipe(replace(/\{%[\s\S]*?%\}/g, ""))
 				.pipe(htmlhint({
 					"doctype-first": false
 				}))
