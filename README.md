@@ -52,7 +52,7 @@ server {
     server_name qil-dev.tff.com www.qil-dev.tff.com *.qil-dev.tff.com;
     root   /vagrant/yiifrontendtff;
     sub_filter      </body>
-        '<!--[if !IE]><!--><script src="http://192.168.56.1:35729/livereload.js"></script></body><!--<![endif]-->';
+        '<!--[if !IE]><!--><script src="http://192.168.56.1:35729/livereload.js"></script><!--<![endif]--></body>';
     sub_filter_once on;
 }
 ```
