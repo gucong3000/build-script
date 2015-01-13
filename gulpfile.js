@@ -250,7 +250,7 @@ function compiler(opt) {
 		watch(opt.rootPath + "protected/views/**/*.html", function(files) {
 			return doWhenNotLock(function() {
 				return files.pipe(plumber(errrHandler))
-					.pipe(replace(/\{%[\s\S]*?%\}/g, ""))
+					.pipe(replace(/\{%[\s\S]+%\}/g, ""))
 					.pipe(htmlhint({
 						"doctype-first": false
 					}))
@@ -456,7 +456,7 @@ function fileTest(files) {
 			htmlhint = require("gulp-htmlhint");
 			replace = require("gulp-replace");
 			gulp.src(htmlFile)
-				.pipe(replace(/\{%[\s\S]*?%\}/g, ""))
+				.pipe(replace(/\{%[\s\S]+%\}/g, ""))
 				.pipe(htmlhint({
 					"doctype-first": false
 				}))
