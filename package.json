@@ -2,7 +2,7 @@
   "name": "tff",
   "title": "Tours4Fun",
   "description": "FE",
-  "version": "0.3.10",
+  "version": "0.3.11",
   "homepage": "http://toursforfun.com",
   "author": {
     "name": "qil",
@@ -40,7 +40,7 @@
     "gulp-watch": "^1.2.0",
     "gulp-filter": "^1.0.2",
     "gulp-jshint": "^1.9.0",
-    "gulp-uglify": "^1.0.1",
+    "gulp-uglify": "^1.0.2",
     "gulp-replace": "^0.5.0",
     "gulp-wrapper": "^0.1.5",
     "gulp-htmlhint": "0.0.9",
