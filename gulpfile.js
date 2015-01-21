@@ -139,7 +139,7 @@ function compiler(opt) {
 	 * @return {String}     加入hash后的url
 	 */
 	function uriHash(uri) {
-		var md5File = require('md5-file');
+		var md5File = require("md5-file");
 		var filePath = path.join(opt.rootPath, uri.replace(/^\//, ""));
 		if (fs.existsSync(filePath)) {
 			uri += "?" + md5File(filePath);
