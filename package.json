@@ -27,6 +27,7 @@
     "fixmyjs": "^0.13.6",
     "request": "^2.48.0",
     "yuidocjs": "^0.3.50",
+    "md5-file": "^1.1.10",
     "native-msg-box": "0.0.3",
     "gulp": "^3.8.10",
     "gulp-util": "^3.0.1",

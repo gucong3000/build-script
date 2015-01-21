@@ -134,6 +134,20 @@ function compiler(opt) {
 	}
 
 	/**
+	 * url后追加文件hash
+	 * @param  {String} uri 文件旧的url
+	 * @return {String}     加入hash后的url
+	 */
+	function uriHash(uri) {
+		var md5File = require('md5-file');
+		var filePath = path.join(opt.rootPath, uri.replace(/^\//, ""));
+		if (fs.existsSync(filePath)) {
+			uri += "?" + md5File(filePath);
+		}
+		return uri;
+	}
+
+	/**
 	 * less转css
 	 * @param  {[File[]]} files less文件
 	 * @return {File[]} css文件
@@ -145,6 +159,18 @@ function compiler(opt) {
 				.pipe(sourcemaps.init())
 				.pipe(less({
 					compress: !opt.noCompress
+				}))
+				.pipe(replace(/url\((.*?)\)/ig, function(s, url) {
+					try {
+						url = JSON.parse(url);
+					} catch (ex) {
+
+					}
+					url = url.trim();
+					if (/^\//.test(url)) {
+						url = uriHash(url) || url;
+					}
+					return "url(" + url + ")";
 				}))
 				.pipe(autoprefixer({
 					browsers: ["last 3 version", "ie > 8", "Android >= 3", "Safari >= 5.1", "iOS >= 5"]
