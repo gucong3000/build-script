@@ -97,7 +97,6 @@ function compiler(opt) {
 		jshint = require("gulp-jshint"),
 		filter = require("gulp-filter"),
 		rename = require("gulp-rename"),
-		tmodjs = require("gulp-tmod"),
 		watch = allCompiler ? function(globs, fn) {
 			return fn(gulp.src(globs));
 		} : require("gulp-watch"),
@@ -156,6 +155,15 @@ function compiler(opt) {
 		});
 	}
 
+	/**
+	 * 根据文件路径，转换为js模块id
+	 * @param  {Object} file gulp-wrapper 插件所给出的文件信息
+	 * @return {String}       js格式字符串
+	 */
+	function moduleName(file) {
+		return JSON.stringify(path.relative(opt.scriptSrc, file.path).replace(/\\/g, "/").replace(/\.\w+$/, ""));
+	}
+
 	// js文件编译，htc文件编译
 	watch(opt.scriptSrc + "**/*.js", function(files) {
 		return doWhenNotLock(function() {
@@ -211,7 +219,7 @@ function compiler(opt) {
 				}))
 				.pipe(wrapper({
 					header: function(file) {
-						return "(function(f){typeof define===\"function\"?define(\"" + file.path.match(/([^\/\\]+)(\.\w+)$/)[1] + "\",f):f()})(function(require,exports,module){";
+						return "(function(f){typeof define===\"function\"?define(" + moduleName(file) + ",f):f()})(function(require,exports,module){";
 					},
 					footer: "});"
 				}))
@@ -236,12 +244,23 @@ function compiler(opt) {
 	watch(opt.scriptSrc + "**/*.html", function(files) {
 		return doWhenNotLock(function() {
 			return files.pipe(plumber(errrHandler))
-				.pipe(tmodjs({
-					output: opt.scriptDest,
-					base: opt.scriptSrc,
-					combo: false,
-					type: "cmd"
-				}));
+				.pipe(replace(/^[\s\S]*$/, function(html) {
+					var template = require("art-template");
+					return template.compile(html.replace(/\s+/g, " ")).toString().replace(/\binclude\s*\(\s*([^\,\)]+)[^)]*?\)/g, function(s, file) {
+						return "require(" + file + ");" + s;
+					});
+				}))
+				.pipe(uglify(uglifyOpt))
+				.pipe(wrapper({
+					header: function(file) {
+						return "/*TMODJS:{}*/\ndefine(" + moduleName(file) + ",function(require,exports,module){module.exports=require(\"template\")(module.id,";
+					},
+					footer: ")});"
+				}))
+				.pipe(rename(function(path) {
+					path.extname = ".js";
+				}))
+				.pipe(gulp.dest(opt.scriptDest));
 		});
 	});
 
@@ -623,4 +642,3 @@ gulp.task("doc", function() {
 	require("opener")("http://localhost:" + port);
 	update();
 });
-
