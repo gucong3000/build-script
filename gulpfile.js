@@ -135,14 +135,18 @@ function compiler(opt) {
 
 	/**
 	 * url后追加文件hash
-	 * @param  {String} uri 文件旧的url
-	 * @return {String}     加入hash后的url
+	 * @param  {String} uri 文件旧的uri
+	 * @return {String}     加入hash后的uri
 	 */
 	function uriHash(uri) {
-		var md5File = require("md5-file");
+			console.log(uri);
 		var filePath = path.join(opt.rootPath, uri.replace(/^\//, ""));
-		if (fs.existsSync(filePath)) {
-			uri += "?" + md5File(filePath);
+		if (/ajaxload/.test(uri)) {
+			var request = require("request");
+			// http://ajaxload.info/cache/FF/FF/FF/00/00/00/2-0.gif
+			// http://ajaxload.info/cache/FF/FF/FF/00/00/00/2-1.gif
+		} else if (fs.existsSync(filePath)) {
+			uri += "?" + require("md5-file")(filePath);
 		}
 		return uri;
 	}
@@ -157,9 +161,6 @@ function compiler(opt) {
 			return (files || gulp.src([lessFile])).pipe(filter(["**/*.less", "!**/*.module.less"]))
 				.pipe(plumber(errrHandler))
 				.pipe(sourcemaps.init())
-				.pipe(less({
-					compress: !opt.noCompress
-				}))
 				.pipe(replace(/url\((.*?)\)/ig, function(s, url) {
 					try {
 						url = JSON.parse(url);
@@ -167,10 +168,11 @@ function compiler(opt) {
 
 					}
 					url = url.trim();
-					if (/^\//.test(url)) {
-						url = uriHash(url) || url;
-					}
+					url = uriHash(url) || url;
 					return "url(" + url + ")";
+				}))
+				.pipe(less({
+					compress: !opt.noCompress
 				}))
 				.pipe(autoprefixer({
 					browsers: ["last 3 version", "ie > 8", "Android >= 3", "Safari >= 5.1", "iOS >= 5"]
