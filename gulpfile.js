@@ -64,6 +64,56 @@ function findRoot() {
 	})();
 }
 
+
+/**
+ * Hex格式颜色值转换，去掉“#”，3位自动变6位
+ * @param  {String} string Hex格式颜色
+ * @return {String}        Hex格式颜色
+ */
+function hexColor(string) {
+	string = string.replace(/^\W/, "");
+	if (string.length === 3) {
+		string = string.replace(/(\w)/g, "$1$1");
+	}
+	return string.toLowerCase();
+}
+
+/**
+ * 文件下载
+ * @param  {Object|String} opt      选项或者url
+ * @param  {[String]} filePath 文件保存路径
+ */
+var downloading = {};
+function download(opt, filePath) {
+	var url = opt.url || opt;
+	if(!downloading[url]){
+		downloading[url] = true;
+		var isBinary = /\w+\.(gif|a?png|jpe?g|webp)$/.test(url),
+			stream = require("request")(opt, function(error, response, body) {
+				if (!error && response.statusCode === 200) {
+					if (!isBinary) {
+						fs.writeFile(filePath, body);
+					}
+					console.log("下载成功:\t" + url);
+				} else {
+					downloading[url] = false;
+					console.log("下载失败:\t" + url);
+					if (isBinary) {
+						setTimeout(function() {
+							fs.unlinkSync(filePath);
+						}, 200);
+					}
+				}
+			});
+		if (!filePath) {
+			filePath = url.replace(/^.+\//, "");
+		}
+		if (isBinary) {
+			stream.pipe(fs.createWriteStream(filePath));
+		}
+	}
+}
+
 /**
  * 文件编译任务
  * @param  {Object} opt css、js输入输出目录
@@ -134,21 +184,48 @@ function compiler(opt) {
 	}
 
 	/**
-	 * url后追加文件hash
+	 * css中url方式引入资源处理
 	 * @param  {String} uri 文件旧的uri
-	 * @return {String}     加入hash后的uri
+	 * @return {String}     处理后的uri
 	 */
-	function uriHash(uri) {
-			console.log(uri);
-		var filePath = path.join(opt.rootPath, uri.replace(/^\//, ""));
-		if (/ajaxload/.test(uri)) {
-			var request = require("request");
-			// http://ajaxload.info/cache/FF/FF/FF/00/00/00/2-0.gif
-			// http://ajaxload.info/cache/FF/FF/FF/00/00/00/2-1.gif
-		} else if (fs.existsSync(filePath)) {
-			uri += "?" + require("md5-file")(filePath);
+	function imgFile(uri) {
+		var filePath;
+		try {
+			uri = JSON.parse(uri);
+		} catch (ex) {}
+		uri = uri.trim();
+		if (uri) {
+			// loading动画生成
+			if (/ajaxload.info\W(\d+)(\W[a-f\d]+)?(\W[a-f\d]+)?/i.test(uri)) {
+				var type = RegExp.$1,
+					color1 = RegExp.$2,
+					color2 = RegExp.$3,
+					colorInfo = hexColor(color1 || "fff") + hexColor(color2 || "000"),
+					fileUri = "imgs/ajaxload_info/" + colorInfo + ".gif",
+					url;
+				filePath = path.join(opt.rootPath, fileUri);
+
+				if (!fs.existsSync(filePath)) {
+					url = "http://ajaxload.info/cache/" + colorInfo.replace(/(\w{2})/g, "$1/") + type + "-1.gif";
+					console.log("正在文件下载：\n" + url + "\n" + filePath);
+					download({
+						url: url,
+						headers: {
+							Host: "ajaxload.info",
+							Referer: "http://ajaxload.info/"
+						}
+					}, filePath);
+				}
+				uri = "/" + fileUri;
+			} else {
+				filePath = path.join(opt.rootPath, uri.replace(/^\//, ""));
+				if (fs.existsSync(filePath)) {
+					// 文件hash生成
+					uri += "?" + require("md5-file")(filePath);
+				}
+			}
+			return uri;
 		}
-		return uri;
 	}
 
 	/**
@@ -162,14 +239,7 @@ function compiler(opt) {
 				.pipe(plumber(errrHandler))
 				.pipe(sourcemaps.init())
 				.pipe(replace(/url\((.*?)\)/ig, function(s, url) {
-					try {
-						url = JSON.parse(url);
-					} catch (ex) {
-
-					}
-					url = url.trim();
-					url = uriHash(url) || url;
-					return "url(" + url + ")";
+					return "url(" + (imgFile(url) || url) + ")";
 				}))
 				.pipe(less({
 					compress: !opt.noCompress
@@ -651,4 +721,3 @@ gulp.task("doc", function() {
 	require("opener")("http://localhost:" + port);
 	update();
 });
-
