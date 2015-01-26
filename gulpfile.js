@@ -201,7 +201,7 @@ function compiler(opt) {
 					color1 = RegExp.$2,
 					color2 = RegExp.$3,
 					colorInfo = hexColor(color1 || "fff") + hexColor(color2 || "000"),
-					fileUri = "imgs/ajaxload_info/" + colorInfo + ".gif",
+					fileUri = "imgs/ajaxload_info/" + type + "_" +colorInfo + ".gif",
 					url;
 				filePath = path.join(opt.rootPath, fileUri);
 
