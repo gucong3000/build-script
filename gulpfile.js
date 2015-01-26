@@ -84,9 +84,10 @@ function hexColor(string) {
  * @param  {[String]} filePath 文件保存路径
  */
 var downloading = {};
+
 function download(opt, filePath) {
 	var url = opt.url || opt;
-	if(!downloading[url]){
+	if (!downloading[url]) {
 		downloading[url] = true;
 		var isBinary = /\w+\.(gif|a?png|jpe?g|webp)$/.test(url),
 			stream = require("request")(opt, function(error, response, body) {
@@ -189,7 +190,8 @@ function compiler(opt) {
 	 * @return {String}     处理后的uri
 	 */
 	function imgFile(uri) {
-		var filePath;
+		var filePath,
+			hash;
 		try {
 			uri = JSON.parse(uri);
 		} catch (ex) {}
@@ -201,7 +203,7 @@ function compiler(opt) {
 					color1 = RegExp.$2,
 					color2 = RegExp.$3,
 					colorInfo = hexColor(color1 || "fff") + hexColor(color2 || "000"),
-					fileUri = "imgs/ajaxload_info/" + type + "_" +colorInfo + ".gif",
+					fileUri = "imgs/ajaxload_info/" + type + "_" + colorInfo + ".gif",
 					url;
 				filePath = path.join(opt.rootPath, fileUri);
 
@@ -218,10 +220,17 @@ function compiler(opt) {
 				}
 				uri = "/" + fileUri;
 			} else {
-				filePath = path.join(opt.rootPath, uri.replace(/^\//, ""));
+				filePath = path.join(opt.rootPath, uri.replace(/^\//, "").replace(/#([^#\/\\])$/, function(s, hashString) {
+					hash = hashString;
+					return "";
+				}));
+				if (hash === "datauri") {
+					var Datauri = require('datauri'),
+						dUri = Datauri('test/myfile.png');
+				}
 				if (fs.existsSync(filePath)) {
-					// 文件hash生成
-					uri += "?" + require("md5-file")(filePath);
+					// 文件query生成
+					uri += "?_=" + require("md5-file")(filePath);
 				}
 			}
 			return uri;
@@ -238,11 +247,11 @@ function compiler(opt) {
 			return (files || gulp.src([lessFile])).pipe(filter(["**/*.less", "!**/*.module.less"]))
 				.pipe(plumber(errrHandler))
 				.pipe(sourcemaps.init())
-				.pipe(replace(/url\((.*?)\)/ig, function(s, url) {
-					return "url(" + (imgFile(url) || url) + ")";
-				}))
 				.pipe(less({
 					compress: !opt.noCompress
+				}))
+				.pipe(replace(/url\((.*?)\)/ig, function(s, url) {
+					return "url(" + (imgFile(url) || url) + ")";
 				}))
 				.pipe(autoprefixer({
 					browsers: ["last 3 version", "ie > 8", "Android >= 3", "Safari >= 5.1", "iOS >= 5"]
