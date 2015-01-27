@@ -189,16 +189,13 @@ function compiler(opt) {
 	 * @return {String}          链接转为磁盘路径
 	 */
 	function resolvePath(uri, filePath) {
-		try {
-			uri = JSON.parse(uri);
-		} catch (ex) {}
 		if (uri && (uri = uri.trim()) && !/\.less$/.test(uri) && !/^\w+:\w+/.test(uri)) {
 			if (/^\//.test(uri)) {
 				uri = uri.slice(1);
 			} else {
 				uri = path.join(filePath.replace(/[^\\\/]+$/, ""), uri);
 			}
-			return path.resolve(opt.rootPath, uri).replace(/#.*$/, "");
+			return path.resolve(opt.rootPath, uri).replace(/(\.eot)\?#\w+$/, "$1").replace(/#.*$/, "");
 		}
 	}
 
@@ -220,6 +217,9 @@ function compiler(opt) {
 				return;
 			}
 			var css = file.contents.toString().replace(/\burl\((.*?)\)/ig, function(s, url) {
+				try {
+					url = JSON.parse(url);
+				} catch (ex) {}
 				var filePath = resolvePath(url, file.path);
 				return filePath ? "url(" + (callback(url, filePath) || url) + ")" : s;
 			});
@@ -262,7 +262,6 @@ function compiler(opt) {
 		}
 	}
 
-
 	/**
 	 * url后拼接文件MD5
 	 * @param  {String} uri      原始的rul
@@ -272,7 +271,7 @@ function compiler(opt) {
 	function filemd5(uri, filePath) {
 		if (fs.existsSync(filePath)) {
 			// 文件query生成
-			return uri + "?" + require("md5-file")(filePath);
+			return uri.replace(/\??(#[^#]+)?$/, "?" + require("md5-file")(filePath) + "$1");
 		}
 	}
 
@@ -299,12 +298,12 @@ function compiler(opt) {
 			return (files || gulp.src([lessFile])).pipe(filter(["**/*.less", "!**/*.module.less"]))
 				.pipe(plumber(errrHandler))
 				.pipe(sourcemaps.init())
-				.pipe(cssUrls(function(url, filePath) {
-					return loadingIcon(url) || datauri(url, filePath) || filemd5(url, filePath);
-				}))
 				.pipe(less({
 					compress: !opt.noCompress,
 					paths: [path.resolve(opt.rootPath)]
+				}))
+				.pipe(cssUrls(function(url, filePath) {
+					return loadingIcon(url) || datauri(url, filePath) || filemd5(url, filePath);
 				}))
 				.pipe(autoprefixer({
 					browsers: ["last 3 version", "ie > 8", "Android >= 3", "Safari >= 5.1", "iOS >= 5"]
