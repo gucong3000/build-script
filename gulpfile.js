@@ -161,8 +161,28 @@ function compiler(opt) {
 			preserveComments: function(o, info) {
 				return /@(cc_on|if|else|end|_jscript(_\w+)?)\s/i.test(info.value);
 			}
-		};
+		},
+		cssUrls = function(callback) {
+			var through = require("through2");
+			return through.obj(function(file, enc, cb) {
+				if (file.isNull()) {
+					cb(null, file);
+					return;
+				}
 
+				if (file.isStream()) {
+					cb(console.log("gulp-cssUrls", "Streaming not supported"));
+					return;
+				}
+				var css = file.contents.toString().replace(/\burl\((.*?)\)/ig, function(s, url) {
+					var filepath = resolvePath(url, file.path);
+					return filepath ? "url(" + (callback(url, filepath) || url) + ")" : s;
+				});
+
+				file.contents = new Buffer(css);
+				cb();
+			});
+		};
 	/**
 	 * git未锁定项目时执行
 	 * @param  {Function} callback 要执行的回调函数
@@ -184,19 +204,32 @@ function compiler(opt) {
 		}
 	}
 
+	function resolvePath(uri, filePath) {
+		try {
+			uri = JSON.parse(uri)
+		} catch (ex) {}
+		if (uri && (uri = uri.trim()) && !/\.less$/.test(uri) && !/^\w+:\w+/.test(uri)) {
+			if (/^\//.test(uri)) {
+				uri = uri.slice(1);
+			} else {
+				uri = path.join(filePath.replace(/[^\\\/]+$/, ""), uri);
+			}
+			return path.resolve(opt.rootPath, uri);
+		}
+	}
+
 	/**
 	 * css中url方式引入资源处理
 	 * @param  {String} uri 文件旧的uri
 	 * @return {String}     处理后的uri
 	 */
 	function imgFile(uri) {
-		var filePath,
-			hash;
+		var filePath;
 		try {
 			uri = JSON.parse(uri);
 		} catch (ex) {}
 		uri = uri.trim();
-		if (uri) {
+		if (uri && !/\.less$/.test(uri)) {
 			// loading动画生成
 			if (/ajaxload.info\W(\d+)(\W[a-f\d]+)?(\W[a-f\d]+)?/i.test(uri)) {
 				var type = RegExp.$1,
@@ -219,21 +252,14 @@ function compiler(opt) {
 					}, filePath);
 				}
 				uri = "/" + fileUri;
-			} else {
-				filePath = path.join(opt.rootPath, uri.replace(/^\//, "").replace(/#([^#\/\\])$/, function(s, hashString) {
-					hash = hashString;
-					return "";
-				}));
-				if (hash === "datauri") {
-					var Datauri = require('datauri'),
-						dUri = Datauri('test/myfile.png');
-				}
-				if (fs.existsSync(filePath)) {
-					// 文件query生成
-					uri += "?_=" + require("md5-file")(filePath);
-				}
-			}
-			return uri;
+				return uri;
+			// } else {
+			// 	filePath = path.join(opt.rootPath, uri.replace(/^\//, ""));
+			// 	if (fs.existsSync(filePath)) {
+			// 		// 文件query生成
+			// 		uri += "?" + require("md5-file")(filePath);
+			// 	}
+			// }
 		}
 	}
 
@@ -247,11 +273,27 @@ function compiler(opt) {
 			return (files || gulp.src([lessFile])).pipe(filter(["**/*.less", "!**/*.module.less"]))
 				.pipe(plumber(errrHandler))
 				.pipe(sourcemaps.init())
-				.pipe(less({
-					compress: !opt.noCompress
+				// 修正less中data-uri函数对绝对路径的支持
+				/*.pipe(replace(/\bdata-uri\((.*?)\)/ig, function(s, uri) {
+					try {
+						uri = JSON.parse(uri);
+					} catch (ex) {}
+					uri = uri.trim().replace(/^\//, opt.rootPath);
+					if (fs.existsSync(uri)) {
+						console.log();
+						s = "url(" + JSON.stringify(require("datauri")(uri)) + ")";
+					}
+					return s;
+				}))*/
+				.pipe(cssUrls(function(url, filePath) {
+//					console.log(filePath);
 				}))
-				.pipe(replace(/url\((.*?)\)/ig, function(s, url) {
-					return "url(" + (imgFile(url) || url) + ")";
+				// .pipe(replace(/\burl\((.*?)\)/ig, function(s, url) {
+				// 	return "url(" + (imgFile(url) || url) + ")";
+				// }))
+				.pipe(less({
+					compress: !opt.noCompress,
+					paths: [path.resolve(opt.rootPath)]
 				}))
 				.pipe(autoprefixer({
 					browsers: ["last 3 version", "ie > 8", "Android >= 3", "Safari >= 5.1", "iOS >= 5"]
