@@ -14,3 +14,5 @@ moxie.js
 placeholder.js
 h5form.el.js
 h5form.js
+js/base.js
+script/stylefix.js
