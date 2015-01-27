@@ -161,27 +161,6 @@ function compiler(opt) {
 			preserveComments: function(o, info) {
 				return /@(cc_on|if|else|end|_jscript(_\w+)?)\s/i.test(info.value);
 			}
-		},
-		cssUrls = function(callback) {
-			var through = require("through2");
-			return through.obj(function(file, enc, cb) {
-				if (file.isNull()) {
-					cb(null, file);
-					return;
-				}
-
-				if (file.isStream()) {
-					cb(console.log("gulp-cssUrls", "Streaming not supported"));
-					return;
-				}
-				var css = file.contents.toString().replace(/\burl\((.*?)\)/ig, function(s, url) {
-					var filepath = resolvePath(url, file.path);
-					return filepath ? "url(" + (callback(url, filepath) || url) + ")" : s;
-				});
-
-				file.contents = new Buffer(css);
-				cb();
-			});
 		};
 	/**
 	 * git未锁定项目时执行
@@ -204,9 +183,15 @@ function compiler(opt) {
 		}
 	}
 
+	/**
+	 * 链接文件地址转换为磁盘路径
+	 * @param  {String} uri      链接url
+	 * @param  {String} filePath 文件所在磁盘路径
+	 * @return {String}          链接转为磁盘路径
+	 */
 	function resolvePath(uri, filePath) {
 		try {
-			uri = JSON.parse(uri)
+			uri = JSON.parse(uri);
 		} catch (ex) {}
 		if (uri && (uri = uri.trim()) && !/\.less$/.test(uri) && !/^\w+:\w+/.test(uri)) {
 			if (/^\//.test(uri)) {
@@ -214,8 +199,36 @@ function compiler(opt) {
 			} else {
 				uri = path.join(filePath.replace(/[^\\\/]+$/, ""), uri);
 			}
-			return path.resolve(opt.rootPath, uri);
+			return path.resolve(opt.rootPath, uri).replace(/#.*$/, "");
 		}
+	}
+
+	/**
+	 * css文件中的链接处理插件
+	 * @param  {Function} callback 链接处理函数
+	 * @return {Through}            [description]
+	 */
+	function cssUrls(callback) {
+		var through = require("through2");
+		return through.obj(function(file, enc, cb) {
+			if (file.isNull()) {
+				cb(null, file);
+				return;
+			}
+
+			if (file.isStream()) {
+				cb(console.log("gulp-cssUrls", "Streaming not supported"));
+				return;
+			}
+			var css = file.contents.toString().replace(/\burl\((.*?)\)/ig, function(s, url) {
+				var filePath = resolvePath(url, file.path);
+				return filePath ? "url(" + (callback(url, filePath) || url) + ")" : s;
+			});
+
+			file.contents = new Buffer(css);
+			this.push(file);
+			cb();
+		});
 	}
 
 	/**
@@ -223,43 +236,57 @@ function compiler(opt) {
 	 * @param  {String} uri 文件旧的uri
 	 * @return {String}     处理后的uri
 	 */
-	function imgFile(uri) {
-		var filePath;
-		try {
-			uri = JSON.parse(uri);
-		} catch (ex) {}
-		uri = uri.trim();
-		if (uri && !/\.less$/.test(uri)) {
-			// loading动画生成
-			if (/ajaxload.info\W(\d+)(\W[a-f\d]+)?(\W[a-f\d]+)?/i.test(uri)) {
-				var type = RegExp.$1,
-					color1 = RegExp.$2,
-					color2 = RegExp.$3,
-					colorInfo = hexColor(color1 || "fff") + hexColor(color2 || "000"),
-					fileUri = "imgs/ajaxload_info/" + type + "_" + colorInfo + ".gif",
-					url;
-				filePath = path.join(opt.rootPath, fileUri);
+	function loadingIcon(uri, filePath) {
+		var urlInfo = uri.match(/\bajaxload.info\W(\d+)(\W[a-f\d]+)?(\W[a-f\d]+)?/i);
+		if (urlInfo) {
+			var type = urlInfo[1],
+				color1 = urlInfo[2],
+				color2 = urlInfo[3],
+				colorInfo = hexColor(color1 || "fff") + hexColor(color2 || "000"),
+				fileUri = "imgs/ajaxload_info/" + type + "_" + colorInfo + ".gif",
+				url;
+			filePath = path.join(opt.rootPath, fileUri);
 
-				if (!fs.existsSync(filePath)) {
-					url = "http://ajaxload.info/cache/" + colorInfo.replace(/(\w{2})/g, "$1/") + type + "-1.gif";
-					console.log("正在文件下载：\n" + url + "\n" + filePath);
-					download({
-						url: url,
-						headers: {
-							Host: "ajaxload.info",
-							Referer: "http://ajaxload.info/"
-						}
-					}, filePath);
-				}
-				uri = "/" + fileUri;
-				return uri;
-			// } else {
-			// 	filePath = path.join(opt.rootPath, uri.replace(/^\//, ""));
-			// 	if (fs.existsSync(filePath)) {
-			// 		// 文件query生成
-			// 		uri += "?" + require("md5-file")(filePath);
-			// 	}
-			// }
+			if (!fs.existsSync(filePath)) {
+				url = "http://ajaxload.info/cache/" + colorInfo.replace(/(\w{2})/g, "$1/") + type + "-1.gif";
+				console.log("正在文件下载：\n" + url + "\n" + filePath);
+				download({
+					url: url,
+					headers: {
+						Host: "ajaxload.info",
+						Referer: "http://ajaxload.info/"
+					}
+				}, filePath);
+			}
+			uri = "/" + fileUri;
+			return uri;
+		}
+	}
+
+
+	/**
+	 * url后拼接文件MD5
+	 * @param  {String} uri      原始的rul
+	 * @param  {String} filePath 文件磁盘路径
+	 * @return {String}          拼接md5之后的url
+	 */
+	function filemd5(uri, filePath) {
+		if (fs.existsSync(filePath)) {
+			// 文件query生成
+			return uri + "?" + require("md5-file")(filePath);
+		}
+	}
+
+	/**
+	 * 将css文件中的url转为datauri格式
+	 * @param  {String} uri      原始的URL
+	 * @param  {String} filePath 文件磁盘路径
+	 * @return {String}          datauri代码
+	 */
+	function datauri(uri, filePath) {
+		if (/#data\W?ur[il]/i.test(uri) && fs.existsSync(filePath)) {
+			// 文件query生成
+			return JSON.stringify(require("datauri")(filePath));
 		}
 	}
 
@@ -273,24 +300,9 @@ function compiler(opt) {
 			return (files || gulp.src([lessFile])).pipe(filter(["**/*.less", "!**/*.module.less"]))
 				.pipe(plumber(errrHandler))
 				.pipe(sourcemaps.init())
-				// 修正less中data-uri函数对绝对路径的支持
-				/*.pipe(replace(/\bdata-uri\((.*?)\)/ig, function(s, uri) {
-					try {
-						uri = JSON.parse(uri);
-					} catch (ex) {}
-					uri = uri.trim().replace(/^\//, opt.rootPath);
-					if (fs.existsSync(uri)) {
-						console.log();
-						s = "url(" + JSON.stringify(require("datauri")(uri)) + ")";
-					}
-					return s;
-				}))*/
 				.pipe(cssUrls(function(url, filePath) {
-//					console.log(filePath);
+					return loadingIcon(url) || datauri(url, filePath) || filemd5(url, filePath);
 				}))
-				// .pipe(replace(/\burl\((.*?)\)/ig, function(s, url) {
-				// 	return "url(" + (imgFile(url) || url) + ")";
-				// }))
 				.pipe(less({
 					compress: !opt.noCompress,
 					paths: [path.resolve(opt.rootPath)]
