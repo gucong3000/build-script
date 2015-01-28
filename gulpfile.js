@@ -245,12 +245,10 @@ function compiler(opt) {
 		return doWhenNotLock(function() {
 			return files.pipe(plumber(errrHandler))
 				.pipe(replace(/^[\s\S]*$/, function(html) {
-					var template = require("art-template");
-					return template.compile(html.replace(/\s+/g, " ")).toString().replace(/\binclude\s*\(\s*([^\,\)]+)[^)]*?\)/g, function(s, file) {
-						return "require(" + file + ");" + s;
-					});
+					return require("art-template").compile(html.replace(/\s+/g, " ")).toString().replace(/\binclude\s*\(\s*([^\,\)]+)/g, "require($1);include($1");
 				}))
 				.pipe(uglify(uglifyOpt))
+				.pipe(replace(/^(function) \w+/, "$1"))
 				.pipe(wrapper({
 					header: function(file) {
 						return "/*TMODJS:{}*/\ndefine(" + moduleName(file) + ",function(require,exports,module){module.exports=require(\"template\")(module.id,";
