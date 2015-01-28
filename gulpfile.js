@@ -161,6 +161,7 @@ function compiler(opt) {
 				return /@(cc_on|if|else|end|_jscript(_\w+)?)\s/i.test(info.value);
 			}
 		};
+
 	/**
 	 * git未锁定项目时执行
 	 * @param  {Function} callback 要执行的回调函数
