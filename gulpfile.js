@@ -1,3 +1,4 @@
+/* global escape */
 "use strict";
 var gulp = require("gulp"),
 	path = require("path"),
@@ -429,6 +430,7 @@ function compiler(opt) {
 			return doWhenNotLock(function() {
 				return files.pipe(plumber(errrHandler))
 					.pipe(replace(/\{\s*%[\s\S]+?%\s*\}/g, ""))
+					.pipe(replace(/\{\{[\s\S]+?\}\}/g, escape))
 					.pipe(htmlhint({
 						"doctype-first": false
 					}))
