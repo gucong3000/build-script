@@ -42,7 +42,16 @@ build-script
 - 首次运行时会自动关联git钩子，以后git提交文件时，会检查已修改的代码，不符规则的代码将无法提交，同时png图片会自动压缩，文件BOM头会被自动移除
 - 多个项目也可公用一份构建工具，在单独的文件夹下解压并运行gulp，每次都加`--path`参数即可
 
-## 免插件自动刷新方式 ##
+## 配置约定 ##
+
+- js源文件文件请放在`/script.src/`目录下，输出目录为`/script/`
+- js源文件需符合jshnt规则验证
+- less源文件文件请放在`/style.src/`目录下，输出目录为`/style/`
+- less文件中请勿出现浏览器私有属性前缀(如: `-moz-`, `-webkit-`)，除非编译后的css文件中真的缺少你需要的私有属性。
+- 编译后css中的静态文件资源，将自动在路径后追加文件MD5，如`backouound:url(/img/some.png?xxxxxxxxxxxxxx);`
+- less文件中，静态文件路径后追加`#data-uri`，将会被编译为data-uri格式` background: url(data:image/png;base64,…………) no-repeat;`
+
+## 免插件自动刷新浏览器方法 ##
 
 修改nginx配置如下，添加 `sub_filter`
 
@@ -56,12 +65,6 @@ server {
     sub_filter_once on;
 }
 ```
-
-## 浏览器自动刷新插件下载地址 ##
-
-- [Chrome](https://chrome.google.com/webstore/detail/livereload/jnihajbhpnppcggbcgedagnkighmdlei)
-- [Safari](http://download.livereload.com/2.0.9/LiveReload-2.0.9.safariextz)
-- [Firefox](http://download.livereload.com/2.0.8/LiveReload-2.0.8.xpi)
 
 ## 其他 ##
 
