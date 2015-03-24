@@ -550,7 +550,9 @@ function init(strPath) {
 			})(path.join(strPath, ".gitignore"));
 
 			if (!isLocal) {
-				gulp.src([".jshintrc", ".jshintignore"]).pipe(gulp.dest(strPath));
+				[".jshintrc", ".jshintignore"].forEach(function(filename) {
+					fs.writeFileSync(path.join(strPath, filename), fs.readFileSync(filename));
+				});
 			}
 		}
 	});
