@@ -641,7 +641,8 @@ function fileTest(files) {
 			gulp.src(htmlFile)
 				.pipe(replace(/\{\s*%[\s\S]+?%\s*\}/g, ""))
 				.pipe(htmlhint({
-					"doctype-first": false
+					"doctype-first": false,
+					"id-unique": false
 				}))
 				.pipe(htmlhint.reporter())
 				.pipe(htmlhint.failReporter());
