@@ -426,7 +426,7 @@ function compiler(opt) {
 
 	if (!allCompiler) {
 		// html规范检查
-		watch([opt.rootPath + "protected/views/**/*.html", opt.rootPath + "protected/views/**/*.html"], function(files) {
+		watch(opt.rootPath + "protected/views/**/*.html", function(files) {
 			return doWhenNotLock(function() {
 				return files.pipe(plumber(errrHandler))
 					.pipe(replace(/\{\s*%[\s\S]+?%\s*\}/g, ""))
@@ -434,8 +434,7 @@ function compiler(opt) {
 					.pipe(htmlhint({
 						"doctype-first": false
 					}))
-					.pipe(htmlhint.reporter())
-					.pipe(htmlhint.failReporter());
+					.pipe(htmlhint.reporter());
 			});
 		});
 		// less组件发生变化时重编译所有less文件
