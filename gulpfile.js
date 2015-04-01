@@ -426,7 +426,7 @@ function compiler(opt) {
 
 	if (!allCompiler) {
 		// html规范检查
-		watch([opt.rootPath + "protected/views/**/*.html", opt.rootPath + "protected/views/**/*.html"], function(files) {
+		watch([opt.scriptSrc + "**/*.html", opt.rootPath + "protected/views/**/*.html"], function(files) {
 			return doWhenNotLock(function() {
 				return files.pipe(plumber(errrHandler))
 					.pipe(replace(/\{\s*%[\s\S]+?%\s*\}/g, ""))
