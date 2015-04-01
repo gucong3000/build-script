@@ -52,6 +52,7 @@ build-script
 - less文件中请勿出现浏览器私有属性前缀(如: `-moz-`, `-webkit-`)，除非编译后的css文件中真的缺少你需要的私有属性。
 - 编译后css中的静态文件资源，将自动在路径后追加文件MD5，如`backouound:url(/img/some.png?xxxxxxxxxxxxxx);`
 - less文件中，静态文件路径后追加`#data-uri`，将会被编译为data-uri格式` background: url(data:image/png;base64,…………) no-repeat;`
+- less文件中使用`background: url(/imgs/ajaxload.info/2#000#ccc)`，将会在[ajaxload.info](http://ajaxload.info/)下载动画图标，代码中`2`为图标风格，`#000#ccc`为前景色和背景色，可采用3位或6位RGB格式
 
 ## 免插件自动刷新浏览器方法 ##
 
