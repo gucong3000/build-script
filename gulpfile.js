@@ -34,7 +34,7 @@ function errrHandler(e) {
 		msgbox = require("native-msg-box");
 	if (!msgErrs[msg]) {
 		msgErrs[msg] = msg;
-		if (e.plugin !== "gulp-jshint") {
+		if (e.plugin === "gulp-less") {
 			console.log(JSON.stringify(e, 0, 4).trim() || msg);
 		}
 		msgbox.prompt({
