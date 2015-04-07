@@ -272,8 +272,14 @@ function compiler(opt) {
 	 */
 	function filemd5(uri, filePath) {
 		if (fs.existsSync(filePath)) {
-			// 文件query生成
-			return uri.replace(/\??(#[^#]+)?$/, "?" + require("md5-file")(filePath) + "$1");
+			var fileCont = fs.readFileSync(filePath);
+			var sum = require("crypto").createHash("md5");
+			if (/(css|htc|svg)$/.test(filePath)) {
+				fileCont = fileCont.toString().trim().replace(/\r\n?/g, "\n");
+			}
+			sum.update(fileCont);
+			// URL query生成
+			return uri.replace(/\??(#[^#]+)?$/, "?" + sum.digest("hex") + "$1");
 		}
 	}
 

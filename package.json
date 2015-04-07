@@ -2,7 +2,7 @@
   "name": "tff",
   "title": "Tours4Fun",
   "description": "FE",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "homepage": "http://toursforfun.com",
   "author": {
     "name": "qil",
@@ -24,12 +24,12 @@
   "dependencies": {},
   "devDependencies": {
     "opener": "^1.4.1",
+    "crypto": "^0.0.3",
     "fixmyjs": "^1.0.3",
     "request": "^2.54.0",
     "datauri": "^0.6.0",
     "through2": "^0.6.3",
     "yuidocjs": "^0.6.0",
-    "md5-file": "^1.1.10",
     "art-template": "^3.0.3",
     "native-msg-box": "^0.1.5",
     "gulp": "^3.8.11",
