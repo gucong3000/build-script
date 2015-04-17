@@ -274,7 +274,7 @@ function compiler(opt) {
 		if (fs.existsSync(filePath)) {
 			var fileCont = fs.readFileSync(filePath);
 			var sum = require("crypto").createHash("md5");
-			if (/(css|htc|svg)$/.test(filePath)) {
+			if (/(^text|\+xml$)/.test(require('mime').lookup(filePath))) {
 				fileCont = fileCont.toString().trim().replace(/\r\n?/g, "\n");
 			}
 			sum.update(fileCont);

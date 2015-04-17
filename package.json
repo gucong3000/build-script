@@ -23,6 +23,7 @@
   ],
   "dependencies": {},
   "devDependencies": {
+    "mime": "^1.3.4",
     "opener": "^1.4.1",
     "crypto": "^0.0.3",
     "fixmyjs": "^1.0.3",
