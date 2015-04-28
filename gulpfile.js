@@ -151,7 +151,11 @@ function compiler(opt) {
 		rename = require("gulp-rename"),
 		watch = allCompiler ? function(globs, fn) {
 			return fn(gulp.src(globs));
-		} : require("gulp-watch"),
+		} : function(globs, fn) {
+			return gulp.watch(globs, function(e) {
+				fn(gulp.src([e.path]));
+			})
+		},
 		less = require("gulp-less"),
 		lessFile = opt.styleSrc + "**/*.less",
 		locker,
