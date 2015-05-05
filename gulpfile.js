@@ -649,6 +649,7 @@ function fileTest(files) {
 			htmlhint = require("gulp-htmlhint");
 			replace = require("gulp-replace");
 			gulp.src(htmlFile)
+				.pipe(replace(/\{\{[\s\S]+?\}\}/g, escape))
 				.pipe(replace(/\{\s*%[\s\S]+?%\s*\}/g, ""))
 				.pipe(htmlhint({
 					"doctype-first": false,
