@@ -154,7 +154,7 @@ function compiler(opt) {
 		} : function(globs, fn) {
 			return gulp.watch(globs, function(e) {
 				fn(gulp.src([e.path]));
-			})
+			});
 		},
 		less = require("gulp-less"),
 		lessFile = opt.styleSrc + "**/*.less",
@@ -278,7 +278,7 @@ function compiler(opt) {
 		if (fs.existsSync(filePath)) {
 			var fileCont = fs.readFileSync(filePath);
 			var sum = require("crypto").createHash("md5");
-			if (/(^text|\+xml$)/.test(require('mime').lookup(filePath))) {
+			if (/(^text|\+xml$)/.test(require("mime").lookup(filePath))) {
 				fileCont = fileCont.toString().trim().replace(/\r\n?/g, "\n");
 			}
 			sum.update(fileCont);
