@@ -321,7 +321,7 @@ function compiler(opt) {
 					browsers: ["last 3 version", "ie > 8", "Android >= 3", "Safari >= 5.1", "iOS >= 5"]
 				}))
 				.pipe(sourcemaps.write(".", {
-					sourceRoot: opt.styleSrc
+					sourceRoot: "/" + path.relative(opt.rootPath, opt.styleSrc).replace(/\\/g, "/")
 				}))
 				.pipe(gulp.dest(opt.styleDest));
 		});
@@ -353,7 +353,7 @@ function compiler(opt) {
 				.pipe(sourcemaps.init())
 				.pipe(uglify(uglifyOpt))
 				.pipe(sourcemaps.write(".", {
-					sourceRoot: opt.scriptSrc
+					sourceRoot: "/" + path.relative(opt.rootPath, opt.scriptSrc).replace(/\\/g, "/")
 				}))
 				.pipe(gulp.dest(opt.scriptDest))
 				.pipe(jsFilter.restore())
@@ -396,7 +396,7 @@ function compiler(opt) {
 					footer: "});"
 				}))
 				.pipe(sourcemaps.write(".", {
-					sourceRoot: opt.scriptSrc
+					sourceRoot: "/" + path.relative(opt.rootPath, opt.scriptSrc).replace(/\\/g, "/")
 				}))
 				.pipe(gulp.dest(opt.scriptDest))
 				.pipe(modFilter.restore());
@@ -492,7 +492,8 @@ function update() {
 							// 更新与本地版本号有差异的node模块
 							for (var i in netPkg.devDependencies) {
 								if (netPkg.devDependencies[i] !== pkg.devDependencies[i]) {
-									child_process.exec("npm update --save-dev " + i);
+									child_process.exec("npm update");
+									break;
 								}
 							}
 						}
