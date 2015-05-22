@@ -222,10 +222,7 @@ function compiler(opt) {
 				cb(console.log("gulp-cssUrls", "Streaming not supported"));
 				return;
 			}
-			var css = file.contents.toString().replace(/\burl\((.*?)\)/ig, function(s, url) {
-				try {
-					url = JSON.parse(url);
-				} catch (ex) {}
+			var css = file.contents.toString().replace(/\burl\(\s*("|')?(.*?)\1\s*\)/ig, function(s, quote, url) {
 				var filePath = resolvePath(url, file.path);
 				return filePath ? "url(" + (callback(url, filePath) || url) + ")" : s;
 			});
