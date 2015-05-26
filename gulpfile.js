@@ -314,6 +314,7 @@ function compiler(opt) {
 		return doWhenNotLock(function() {
 			return (files || gulp.src([lessFile])).pipe(filter(["**/*.less", "!**/*.module.less"]))
 				.pipe(plumber(errrHandler))
+				.pipe(replace(/\r\n?/g, "\n"))
 				.pipe(sourcemaps.init())
 				.pipe(less({
 					compress: !opt.noCompress,
@@ -350,6 +351,7 @@ function compiler(opt) {
 
 			// 错误捕获
 			return files.pipe(plumber(errrHandler))
+				.pipe(replace(/\r\n?/g, "\n"))
 
 			// 处理js文件
 			.pipe(jsFilter)
