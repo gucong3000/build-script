@@ -152,8 +152,14 @@ function compiler(opt) {
 		watch = allCompiler ? function(globs, fn) {
 			return fn(gulp.src(globs));
 		} : function(globs, fn) {
+			var options;
+			if (typeof globs === "string") {
+				options = {
+					base: path.resolve(globs.replace(/\*+.*$/, ""))
+				};
+			}
 			return gulp.watch(globs, function(e) {
-				fn(gulp.src([e.path]));
+				fn(gulp.src([path.resolve(e.path)], options));
 			});
 		},
 		less = require("gulp-less"),
