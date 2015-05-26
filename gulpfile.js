@@ -159,7 +159,9 @@ function compiler(opt) {
 				};
 			}
 			return gulp.watch(globs, function(e) {
-				fn(gulp.src([path.resolve(e.path)], options));
+				if (e.type !== "deleted") {
+					fn(gulp.src([path.resolve(e.path)], options));
+				}
 			});
 		},
 		less = require("gulp-less"),
