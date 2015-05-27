@@ -2,10 +2,15 @@
 "use strict";
 var gulp = require("gulp"),
 	path = require("path"),
-	fs = require("fs"),
+	fs,
 	msgErrs = {},
 	upProcess;
 
+try {
+	fs = require("fs-extra");
+} catch (ex) {
+	fs = require("fs");
+}
 /**
  * 读取JSON格式文件
  * @param	{String}		file		文件路径
@@ -87,34 +92,56 @@ function hexColor(string) {
 var downloading = {};
 
 function download(opt, filePath) {
-	var url = opt.url || opt;
-	if (!downloading[url]) {
-		downloading[url] = true;
-		var isBinary = /\w+\.(gif|a?png|jpe?g|webp)$/.test(url),
-			stream = require("request")(opt, function(error, response, body) {
-				if (!error && response.statusCode === 200) {
-					if (!isBinary) {
-						fs.writeFile(filePath, body);
-					}
-					console.log("下载成功:\t" + url);
-				} else {
-					downloading[url] = false;
-					console.log("下载失败:\t" + url);
-					if (isBinary) {
-						setTimeout(function() {
-							fs.unlinkSync(filePath);
-						}, 200);
-					}
-				}
-			});
-		if (!filePath) {
-			filePath = url.replace(/^.+\//, "");
-		}
-		if (isBinary) {
-			stream.pipe(fs.createWriteStream(filePath));
+	function outputFileCallbak(err) {
+		if (err) {
+			console.log("下载后文件写入失败:\t" + filePath);
+		} else {
+			console.log("下载成功:\t" + opt.url);
 		}
 	}
+
+	if (typeof opt === "string") {
+		opt = {
+			url: opt
+		};
+	}
+	filePath = filePath || opt.url.replace(/^.*?\/+/, "");
+	opt.Referer = opt.Referer || opt.url.replace(/[^\/]+\/?$/, "");
+	if (!downloading[opt.url]) {
+		downloading[opt.url] = "downtmp/" + Math.random().toString().replace(".", "");
+		// var isBinary = /\w+\.(gif|a?png|jpe?g|webp)$/.test(opt.url),
+		require("request")(opt, function(error, response, body) {
+			if (!error && (response.statusCode === 200 || response.statusCode === 304)) {
+				if (/(^text|\+xml$)/.test(response.headers["content-type"])) {
+					// 文本文件
+					fs.outputFile(filePath, body, outputFileCallbak);
+				} else {
+					// 二进制文件，将临时文件移到制定目录
+					fs.move(downloading[opt.url], filePath, {
+						clobber: true
+					}, outputFileCallbak);
+					return;
+				}
+			} else {
+				downloading[opt.url] = false;
+				console.log("下载失败:\t" + opt.url);
+			}
+			// 删除临时文件
+			fs.removeSync(downloading[opt.url]);
+		}).pipe(fs.createOutputStream(downloading[opt.url]));
+	}
 }
+
+/**
+ * 删除下载临时文件
+ */
+function clearDowntmp() {
+	fs.removeSync("downtmp");
+}
+clearDowntmp();
+// 进程退出时删除下载临时文件
+process.on("exit", clearDowntmp);
+
 
 /**
  * 文件编译任务
@@ -260,13 +287,7 @@ function compiler(opt) {
 			if (!fs.existsSync(filePath)) {
 				url = "http://ajaxload.info/cache/" + colorInfo.replace(/(\w{2})/g, "$1/") + type + "-1.gif";
 				console.log("正在文件下载：\n" + url + "\n" + filePath);
-				download({
-					url: url,
-					headers: {
-						Host: "ajaxload.info",
-						Referer: "http://ajaxload.info/"
-					}
-				}, filePath);
+				download(url, filePath);
 			}
 			uri = "/" + fileUri;
 			return uri;
@@ -494,11 +515,12 @@ function update() {
 						if (netPkg.version !== pkg.version) {
 							// 下载这几个文件到本地
 							[".jshintignore", ".jshintrc", "gulpfile.js", "package.json"].forEach(function(fileName) {
-								request(url + "raw/master/" + fileName).pipe(fs.createWriteStream(path.join(__dirname, fileName)));
+								download(url + "raw/master/" + fileName, path.join(__dirname, fileName));
 							});
 							// 更新与本地版本号有差异的node模块
 							for (var i in netPkg.devDependencies) {
 								if (netPkg.devDependencies[i] !== pkg.devDependencies[i]) {
+									console.log("正在升级node模块，请稍候...")
 									child_process.exec("npm update");
 									break;
 								}
