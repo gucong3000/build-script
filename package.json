@@ -24,7 +24,6 @@
   "dependencies": {},
   "devDependencies": {
     "art-template": "^3.0.3",
-    "crypto": "0.0.3",
     "datauri": "^0.6.0",
     "fixmyjs": "^1.0.3",
     "fs-extra": "^0.18.4",
