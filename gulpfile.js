@@ -136,7 +136,9 @@ function download(opt, filePath) {
  * 删除下载临时文件
  */
 function clearDowntmp() {
-	fs.removeSync("downtmp");
+	if (fs.removeSync) {
+		fs.removeSync("downtmp");
+	}
 }
 clearDowntmp();
 // 进程退出时删除下载临时文件
