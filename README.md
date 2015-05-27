@@ -20,7 +20,7 @@ build-script
 命令行下运行 `gulp 任务名`，即可运行以下任务
 
 - `default` 文件编译任务(默认任务，任务名可忽略不写)
-- `update` 自动升级
+- `update` 自动升级，升级后请运行`npm update`命令
 - `test` 代码检查，供git提交时调用
 - `doc` 显示jsDoc文档
 - `fix` js文件自动修正代码规范 必须配合`--path`参数指定文件名 eq 	`gulp fix --path js.src/xx.js`
