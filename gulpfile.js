@@ -514,19 +514,29 @@ function update() {
 					if (!error && response.statusCode === 200) {
 						netPkg = JSON.parse(body);
 						// 检查线上的package.json中的version是否与本地相等
-						if (netPkg.version !== pkg.version) {
-							// 下载这几个文件到本地
-							[".jshintignore", ".jshintrc", "gulpfile.js", "package.json"].forEach(function(fileName) {
-								download(url + "raw/master/" + fileName, path.join(__dirname, fileName));
-							});
-							// 更新与本地版本号有差异的node模块
-							for (var i in netPkg.devDependencies) {
-								if (netPkg.devDependencies[i] !== pkg.devDependencies[i]) {
-									console.log("正在升级node模块，请稍候...")
-									child_process.exec("npm update");
-									break;
+						if (netPkg.version !== pkg.version || process.argv.indexOf("update") > 0) {
+							console.log("正在升级到" + netPkg.version + "，请勿强制退出。");
+							fs.outputFile("package.json", body, function(err) {
+								if (!err) {
+									// 下载这几个文件到本地
+									[".jshintignore", ".jshintrc", "gulpfile.js"].forEach(function(fileName) {
+										download(url + "raw/master/" + fileName, path.join(__dirname, fileName));
+									});
+									// 更新与本地版本号有差异的node模块
+									for (var i in netPkg.devDependencies) {
+										if (netPkg.devDependencies[i] !== pkg.devDependencies[i]) {
+											console.log("正在升级node模块，请稍候...");
+											child_process.execSync("npm update");
+											break;
+										}
+									}
+									if (process.argv.indexOf("update") < 0) {
+										setTimeout(function() {
+											console.log("升级成功！请重启。");
+										}, 200);
+									}
 								}
-							}
+							});
 						}
 					}
 				});
@@ -661,10 +671,11 @@ function fileTest(files) {
 			// 将html文件单独列出
 			return /\.html?$/.test(path);
 		}),
+		replace = require("gulp-replace"),
 		gulp,
 		jshint,
-		replace,
 		htmlhint;
+
 	if (scrFiles.length) {
 		if (cssFiles.length) {
 			console.log("应通过编译方式修改：" + cssFiles);
@@ -674,12 +685,14 @@ function fileTest(files) {
 		if (jsFiles.length) {
 			// jshint检查js文件
 			jshint = require("gulp-jshint");
-			gulp.src(jsFiles).pipe(jshint()).pipe(jshint.reporter()).pipe(jshint.reporter("fail"));
+			gulp.src(jsFiles)
+				.pipe(replace(/\/\*\s*jshint\s*ignore\s*:\s*\w+\s*\*\//g, ""))
+				.pipe(jshint()).pipe(jshint.reporter())
+				.pipe(jshint.reporter("fail"));
 		}
 		if (htmlFile.length) {
 			// jshint检查js文件
 			htmlhint = require("gulp-htmlhint");
-			replace = require("gulp-replace");
 			gulp.src(htmlFile)
 				.pipe(replace(/\{\{[\s\S]+?\}\}/g, escape))
 				.pipe(replace(/\{\s*%[\s\S]+?%\s*\}/g, ""))
