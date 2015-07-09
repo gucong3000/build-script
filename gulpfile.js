@@ -193,8 +193,10 @@ function compiler(opt) {
 				}
 			});
 		},
+		scss = require("gulp-sass"),
 		less = require("gulp-less"),
 		lessFile = opt.styleSrc + "**/*.less",
+		scssFile = opt.styleSrc + "**/*.scss",
 		locker,
 		uglify = opt.noCompress ? rename : require("gulp-uglify"),
 		uglifyOpt = {
@@ -329,6 +331,33 @@ function compiler(opt) {
 	}
 
 	/**
+	 * scss转css
+	 * @param  {[File[]]} files less文件
+	 * @return {File[]} css文件
+	 */
+	function scss2css(files) {
+		return doWhenNotLock(function() {
+			return (files || gulp.src([scssFile])).pipe(filter(["**/*.scss", "!**/_*.scss"]))
+				.pipe(plumber(errrHandler))
+				.pipe(replace(/\r\n?/g, "\n"))
+				.pipe(sourcemaps.init())
+				.pipe(scss({
+					outputStyle: opt.noCompress ? "expanded" : "compressed"
+				}))
+				.pipe(cssUrls(function(url, filePath) {
+					return loadingIcon(url) || datauri(url, filePath) || filemd5(url, filePath);
+				}))
+				.pipe(autoprefixer({
+					browsers: ["last 3 version", "ie > 8", "Android >= 3", "Safari >= 5.1", "iOS >= 5"]
+				}))
+				.pipe(sourcemaps.write(".", {
+					sourceRoot: "/" + path.relative(opt.rootPath, opt.styleSrc).replace(/\\/g, "/")
+				}))
+				.pipe(gulp.dest(opt.styleDest));
+		});
+	}
+
+	/**
 	 * less转css
 	 * @param  {[File[]]} files less文件
 	 * @return {File[]} css文件
@@ -435,6 +464,13 @@ function compiler(opt) {
 		});
 	});
 
+	// scss文件编译
+	watch(scssFile, function(files) {
+		return doWhenNotLock(function() {
+			return scss2css(files);
+		});
+	});
+
 	// less文件编译
 	watch(lessFile, function(files) {
 		return doWhenNotLock(function() {
@@ -478,6 +514,14 @@ function compiler(opt) {
 					.pipe(htmlhint.failReporter());
 			});
 		});
+
+		// scss组件发生变化时重编译所有scss文件
+		gulp.watch(opt.styleSrc + "**/_*.scss", function() {
+			return doWhenNotLock(function() {
+				return scss2css();
+			});
+		});
+
 		// less组件发生变化时重编译所有less文件
 		gulp.watch(opt.styleSrc + "**/*.module.less", function() {
 			return doWhenNotLock(function() {
