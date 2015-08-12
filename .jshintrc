@@ -30,7 +30,9 @@
 	//必须使用use strict;语法 
 	"strict": true,
 	//暴露全局jQuery和$变量，可以在任何地方随意使用
-	"jquery": true,
+	"jquery": false,
 	//允许Node环境全局成员
-	"node": true
+	"node": true,
+	"globalstrict": true,
+	"esnext": true
 }
