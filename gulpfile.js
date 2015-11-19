@@ -397,9 +397,15 @@ function compiler(opt) {
 	// js文件编译，htc文件编译
 	watch(opt.scriptSrc + "**/*.js", function(files) {
 		return doWhenNotLock(function() {
-			var htcFilter = filter(["**/*.htc.js"]),
-				modFilter = filter(["**/*.module.js"]),
-				jsFilter = filter(["*.js", "!**/*.htc.js", "!**/*.module.js", "!**/*.min.js", "!**/*-min.js"]);
+			var htcFilter = filter(["**/*.htc.js"], {
+					restore: true
+				}),
+				modFilter = filter(["**/*.module.js"], {
+					restore: true
+				}),
+				jsFilter = filter(["*.js", "!**/*.htc.js", "!**/*.module.js", "!**/*.min.js", "!**/*-min.js"], {
+					restore: true
+				});
 
 			// 错误捕获
 			return files.pipe(plumber(errrHandler))
@@ -415,7 +421,7 @@ function compiler(opt) {
 					sourceRoot: "/" + path.relative(opt.rootPath, opt.scriptSrc).replace(/\\/g, "/")
 				}))
 				.pipe(gulp.dest(opt.scriptDest))
-				.pipe(jsFilter.restore())
+				.pipe(jsFilter.restore)
 
 			// 处理htc文件
 			.pipe(htcFilter)
@@ -433,7 +439,7 @@ function compiler(opt) {
 					extname: ""
 				}))
 				.pipe(gulp.dest(opt.scriptDest))
-				.pipe(htcFilter.restore())
+				.pipe(htcFilter.restore)
 
 			// 处理js模块
 			.pipe(modFilter)
@@ -458,7 +464,7 @@ function compiler(opt) {
 					sourceRoot: "/" + path.relative(opt.rootPath, opt.scriptSrc).replace(/\\/g, "/")
 				}))
 				.pipe(gulp.dest(opt.scriptDest))
-				.pipe(modFilter.restore());
+				.pipe(modFilter.restore);
 
 			// .pipe(jsFilter)
 		});
@@ -834,11 +840,12 @@ gulp.task("fix", function() {
 	var path = findRoot();
 	// 从“--path”参数中取出js路径，使用fixmyjs模块重写内容
 	readJSON("./.jshintrc", function(jshintrc) {
+		jshintrc.quotmark = "double";
 		fs.readFile(path, function(err, data) {
 			if (err) {
 				console.log("file not found:\t" + path);
 			} else {
-				fs.writeFile(path, require("fixmyjs").fix(data.toString(), jshintrc).replace(/  /g, "    "));
+				fs.writeFile(path, require("fixmyjs").fix(data.toString(), jshintrc));
 			}
 		});
 	});
