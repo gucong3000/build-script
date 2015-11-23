@@ -703,7 +703,7 @@ function fileTest(files) {
 				}
 			}
 			// 过滤掉压缩版的js和css，并过滤掉css、js、less、html以外的文件，过滤掉.jshintignore声明的文件，过滤掉TMODJS文件
-			return /\.(css|js|less|html?)$/i.test(path) && notIgnore(path) && !/(^\/\*\s*TMODJS\s*:|\/\/# sourceMappingURL[^\n]+$)/.test(fs.readFileSync(path));
+			return /\.(css|js|less|html?)$/i.test(path) && notIgnore(path) && !/(^\/\*\s*TMODJS\s*:|\bsourceMappingURL=[^\n]+\.map\b)/.test(fs.readFileSync(path));
 		}),
 		jsFiles = scrFiles.filter(function(path) {
 			// 将js文件单独列出
