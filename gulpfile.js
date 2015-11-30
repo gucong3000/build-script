@@ -715,7 +715,7 @@ function fileTest(files) {
 		}),
 		lessFiles = scrFiles.filter(function(path) {
 			// 将less文件单独列出
-			return /\.less$/.test(path);
+			return /\.less$/.test(path) && !/\.module\.less$/.test(path);
 		}),
 		htmlFile = scrFiles.filter(function(path) {
 			// 将html文件单独列出
