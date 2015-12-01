@@ -800,7 +800,7 @@ gulp.task("default", function() {
 });
 
 /*
- * 默认任务
+ * m站任务
  */
 gulp.task("m", function() {
 	var root = findRoot();
