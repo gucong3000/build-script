@@ -39,15 +39,19 @@ function errrHandler(e) {
 		msgbox = require("native-msg-box");
 	if (!msgErrs[msg]) {
 		msgErrs[msg] = msg;
-		if (e.plugin === "gulp-less") {
+		if (e.plugin === "gulp-less" || !e.plugin) {
 			console.log(JSON.stringify(e, 0, 4).trim() || msg);
 		}
-		msgbox.prompt({
-			msg: msg,
-			title: "gulp throw a error"
-		}, function() {
-			msgErrs[msg] = null;
-		});
+		try {
+			msgbox.prompt({
+				msg: msg,
+				title: "gulp throw a error"
+			}, function() {
+				msgErrs[msg] = null;
+			});
+		} catch (ex) {
+			errrHandler(ex);
+		}
 	}
 }
 
