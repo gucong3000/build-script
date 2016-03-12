@@ -17,6 +17,7 @@ build-script
 注：由于众所周知的网络原因，从npm官方源拖代码时会遇上麻烦。请先将npm仓库源替换为国内镜像：
 
 >npm config set registry https://registry.npm.taobao.org
+
 >npm config set disturl https://npm.taobao.org/dist
 
 ## gulp任务 ##
