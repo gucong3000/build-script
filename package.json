@@ -1,26 +1,20 @@
 {
-  "name": "tff",
-  "title": "Tours4Fun",
-  "description": "FE",
+  "name": "build-script",
   "version": "0.6.4",
-  "homepage": "http://toursforfun.com",
-  "author": {
-    "name": "qil",
-    "url": "https://www.github.com/gucong3000"
+  "main": "gulpfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/gucong3000/build-script.git"
+    "url": "git+https://github.com/gucong3000/build-script.git"
   },
+  "author": "gucong+https://www.github.com/gucong3000",
+  "license": "MIT",
   "bugs": {
-    "url": "http://brother.toursforfun.com"
+    "url": "https://github.com/gucong3000/build-script/issues"
   },
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "https://github.com/jquery/jquery/blob/master/MIT-LICENSE.txt"
-    }
-  ],
+  "homepage": "https://github.com/gucong3000/build-script",
   "dependencies": {},
   "devDependencies": {
     "art-template": "^3.0.3",
