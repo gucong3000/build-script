@@ -26,5 +26,7 @@
 	//ECMAScript 版本号
 	"esversion": 6,
 	// 声明 node 运行环境
-	"node": true
+	"node": true,
+	// 不得写入全局变量
+	"globals": false
 }
