@@ -14,13 +14,13 @@ build-script
 1. 解压 [master.zip](https://github.com/gucong3000/build-script/archive/master.zip) 到项目根目录
 1. 运行`npm install`
 
+>   在国内安装时，**强烈建议**执行以下命令，使用国内镜像安装：
 
->   由于众所周知的网络原因，从npm官方源拖代码时会遇上麻烦。请先将npm仓库源替换为国内镜像：
-
-```shell
+```bash
 npm config set registry https://registry.npm.taobao.org
 npm config set disturl https://npm.taobao.org/dist
-npm config set phantomjs_cdnurl https://npm.taobao.org/dist/phantomjs
+npm config set sass_binary_site https://npm.taobao.org/mirrors/node-sass
+npm config set phantomjs_cdnurl https://npm.taobao.org/mirrors/phantomjs
 ```
 
 ## gulp任务 ##
