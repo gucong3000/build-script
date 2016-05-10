@@ -17,10 +17,10 @@ build-script
 >   在国内安装时，**强烈建议**执行以下命令，使用国内镜像安装：
 
 ```bash
-npm config set registry https://registry.npm.taobao.org
-npm config set disturl https://npm.taobao.org/dist
-npm config set sass_binary_site https://npm.taobao.org/mirrors/node-sass
-npm config set phantomjs_cdnurl https://npm.taobao.org/mirrors/phantomjs
+npm config set registry https://registry.npm.taobao.org --global
+npm config set disturl https://npm.taobao.org/dist --global
+npm config set sass_binary_site https://npm.taobao.org/mirrors/node-sass --global
+npm config set phantomjs_cdnurl https://npm.taobao.org/mirrors/phantomjs --global
 ```
 
 ## gulp任务 ##
